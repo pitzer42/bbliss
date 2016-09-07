@@ -4,9 +4,8 @@ block content
   h1= title
   p Welcome to #{title}
   div
-    a(href="stream/add") 
-      button stream
+    a(href='/watch')
+      input(type='button' value='watch')
     a 
-    a(href="stream/list") 
-      button watch
-  script(src='javascripts/bundle.js')
+    a(href='/stream/add') 
+      input(type='button' value='stream')

@@ -1,15 +1,16 @@
-var request = function(method, url, callback){
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      var data = JSON.parse(this.responseText);
-      callback(data);
-    }
-  };
-  xmlhttp.open(method, url, true);
-  xmlhttp.send();
-};
+function GeolocationAPI(onLocalized){
+  const request = require('./request');
+  const api_url = 'http://ipinfo.io/json';
+  const onResponse = (response)=>{ onLocalized(response.loc); };
+  request.get(api_url, onResponse);
+}
 
-request('GET', 'http://ipinfo.io/json', (data)=>{
-  document.write(data.loc);
-});
+exports.locate = function(onLocalized){
+  const fallback = ()=>{
+    GeolocationAPI(onLocalized);
+  };
+  if (navigator.geolocation)
+      navigator.geolocation.getCurrentPosition(onLocalized, fallback);
+  else
+    fallback();
+};
