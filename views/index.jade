@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  div
+    a(href="stream/add") 
+      button stream
+    a 
+    a(href="stream/list") 
+      button watch
+  script(src='javascripts/bundle.js')

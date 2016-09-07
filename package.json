@@ -1,0 +1,32 @@
+{
+  "name": "fluxo",
+  "version": "0.1.0",
+  "description": "P2P live streaming with WebRTC",
+  "main": "src/main.js",
+  "dependencies": {
+    "body-parser": "~1.15.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.2.0",
+    "express": "~4.13.4",
+    "jade": "~1.11.0",
+    "morgan": "~1.7.0",
+    "serve-favicon": "~2.3.0",
+    "babel-polyfill": "^6.0.16"
+  },
+  "devDependencies": {
+    "babel-core": "^6.1.2",
+    "babel-loader": "^6.0.1",
+    "babel-preset-es2015": "^6.1.2",
+    "webpack": "^1.10.0",
+    "webpack-dev-server": "^1.10.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "bitbucket url"
+  },
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "author": "Arthur Pitzer <arthurpitzer@id.uff.br>",
+  "license": "MIT"
+}
