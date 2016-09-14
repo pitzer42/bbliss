@@ -1,11 +1,11 @@
 function GeolocationAPI(onLocalized){
-  const request = require('./request');
+  const $ = require('jquery');
   const api_url = 'http://ipinfo.io/json';
-  const onResponse = (response)=>{ onLocalized(response.loc); };
-  request.get(api_url, onResponse);
+  const onResponse = onLocalized.bind(response.loc);
+  $.get(api_url, onResponse);
 }
 
-exports.locate = function(onLocalized){
+module.exports = function(onLocalized){
   const fallback = ()=>{
     GeolocationAPI(onLocalized);
   };
