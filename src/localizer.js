@@ -1,8 +1,9 @@
 function GeolocationAPI(onLocalized){
   const $ = require('jquery');
   const api_url = 'http://ipinfo.io/json';
-  const onResponse = onLocalized.bind(response.loc);
-  $.get(api_url, onResponse);
+  const onResponse = (response)=>{onLocalized(response.loc)}
+  onResponse({loc:"here"})
+  //$.get(api_url, onResponse);
 }
 
 module.exports = function(onLocalized){

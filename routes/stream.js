@@ -12,22 +12,21 @@ router.get('/list', (req, res, next)=>{
 })
 
 router.get('/new', (req, res, next)=>{
-  res.sendFile( path.join(__dirname, '../public/newStream.html'))
+  res.sendFile(path.join(__dirname, '../public/newStream.html'))
 });
 
 router.post('/new', (req, res, next)=>{
   const item = req.body
 
   storage((db)=>{
-    db.streams.save(item, (err, result)=>{
+    db.collection('streams').save(item, (err, result)=>{
       if(err)
         console.log(err)
       else
         console.log('saved')
     })
   })
-
-  res.redirect('/')
+  res.sendFile(path.join(__dirname, '../public/streaming.html'))
 });
 
 module.exports = router;

@@ -10150,7 +10150,8 @@
 	  var onResponse = function onResponse(response) {
 	    onLocalized(response.loc);
 	  };
-	  $.get(api_url, onResponse);
+	  onResponse({ loc: "here" });
+	  //$.get(api_url, onResponse);
 	}
 
 	module.exports = function (onLocalized) {
