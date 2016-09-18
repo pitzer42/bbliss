@@ -40,14 +40,15 @@
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var $ = __webpack_require__(1);
-	var localizer = __webpack_require__(2);
+	var $ = __webpack_require__(11);
+	var localizer = __webpack_require__(12);
 
 	$(':submit').prop('disabled', true);
 
@@ -59,7 +60,8 @@
 	$('input[name=browser]').val(navigator.userAgent);
 
 /***/ },
-/* 1 */
+
+/***/ 11:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*eslint-disable no-unused-vars*/
@@ -10139,19 +10141,20 @@
 
 
 /***/ },
-/* 2 */
+
+/***/ 12:
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	function GeolocationAPI(onLocalized) {
-	  var $ = __webpack_require__(1);
+	  var $ = __webpack_require__(11);
 	  var api_url = 'http://ipinfo.io/json';
 	  var onResponse = function onResponse(response) {
 	    onLocalized(response.loc);
 	  };
-	  onResponse({ loc: "here" });
-	  //$.get(api_url, onResponse);
+	  //onResponse({loc:"here"})
+	  $.get(api_url, onResponse);
 	}
 
 	module.exports = function (onLocalized) {
@@ -10162,4 +10165,5 @@
 	};
 
 /***/ }
-/******/ ]);
+
+/******/ });
