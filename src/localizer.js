@@ -2,11 +2,12 @@ function GeolocationAPI(onLocalized){
   const $ = require('jquery');
   const api_url = 'http://ipinfo.io/json';
   const onResponse = (response)=>{onLocalized(response.loc)}
-  //onResponse({loc:"here"})
   $.get(api_url, onResponse);
 }
 
 module.exports = function(onLocalized){
+  onLocalized({loc:'here'})
+  /*
   const fallback = ()=>{
     GeolocationAPI(onLocalized);
   };
@@ -14,4 +15,5 @@ module.exports = function(onLocalized){
       navigator.geolocation.getCurrentPosition(onLocalized, fallback);
   else
     fallback();
+  */
 };

@@ -4,7 +4,7 @@ const dbClient = require('mongodb').MongoClient
 module.exports = function(onSuccess, onError){
   dbClient.connect(url, (err, db)=>{
     if(err)
-      onError(err)
+    onError(err)
     else{
       onSuccess(db)
     }

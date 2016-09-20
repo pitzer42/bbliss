@@ -8,7 +8,8 @@ app.use(bodyParser.urlencoded({
 }))
 
 app.use('/', express.static('public'));
-app.use('/stream', require('./routes/stream'));
+app.use('/app', require('./routes/fluxoAPP'));
+app.use('/api', require('./routes/fluxoAPI'));
 
 app.set('view engine', 'pug');
 app.set('views', './views')

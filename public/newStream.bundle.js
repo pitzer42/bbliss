@@ -52,12 +52,12 @@
 
 	$(':submit').prop('disabled', true);
 
+	$('input[name=platform]').val(navigator.platform);
+
 	localizer(function (location) {
 	  $(':submit').prop('disabled', false);
 	  $('input[name=location]').val(location);
 	});
-
-	$('input[name=browser]').val(navigator.userAgent);
 
 /***/ },
 
@@ -10153,11 +10153,12 @@
 	  var onResponse = function onResponse(response) {
 	    onLocalized(response.loc);
 	  };
-	  //onResponse({loc:"here"})
 	  $.get(api_url, onResponse);
 	}
 
 	module.exports = function (onLocalized) {
+	  onLocalized({ loc: 'here' });
+	  return;
 	  var fallback = function fallback() {
 	    GeolocationAPI(onLocalized);
 	  };
