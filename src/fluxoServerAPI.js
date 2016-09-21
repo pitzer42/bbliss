@@ -9,6 +9,7 @@ exports.insertPeer = (location, platform, candidates, onResult) =>{
     maxResources: maxResources,
     candidates: candidates
   }
+  console.log(candidates)
   storage((db)=>{
     const peers = db.collection('peers')
     const invokeOnResult =  onResult.bind(null, newPeer)
@@ -19,7 +20,7 @@ exports.insertPeer = (location, platform, candidates, onResult) =>{
 
 exports.insertStream = (title, root, onResult) =>{
   const newStream = {
-    title: title,
+    title: title.replace(' ', '_'),
     root: root._id
   }
   storage((db)=>{
@@ -35,6 +36,15 @@ exports.findStream = (title, onResult) => {
     const streams = db.collection('streams')
     const invokeOnResult = (result)=>{onResult(result[0])}
     streams.find({title: title}).toArray().then(invokeOnResult).catch(logError)
+    db.close()
+  })
+}
+
+exports.findPeer = (id, onResult) =>{
+  storage((db)=>{
+    const peers = db.collection('peers')
+    const invokeOnResult = (result)=>{onResult(result[0])}
+    peers.find({_id: id}).toArray().then(invokeOnResult).catch(logError)
     db.close()
   })
 }

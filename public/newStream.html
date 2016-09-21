@@ -7,13 +7,15 @@
 <body>
   <h1>Fluxo</h1>
   <h2>New stream</h2>
-  <form method="post" action="/app/new">
+  <form method="post" action="/app/new" name="streamForm">
     <a>Title: </a>
     <input type="text" name="title" />
     <input type="hidden" name="location"/>
     <input type="hidden" name="platform"/>
+    <input type="hidden" name="candidate"/>
     <input type="submit" value="start"/>
   </form>
+  <video autoplay></video>
   <script type="text/javascript" src="../newStream.bundle.js" charset="utf-8"></script>
 </body>
 </html>

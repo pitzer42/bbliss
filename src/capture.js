@@ -12,6 +12,8 @@ const offerOptions = {
   offerToReceiveVideo: 1
 };
 
+let onCandidate = null
+
 function displayVideo(stream) {
   const video = document.querySelector('video')
   window.stream = stream // stream available to console
@@ -20,10 +22,8 @@ function displayVideo(stream) {
     const servers = null
     const connection = new RTCPeerConnection(servers)
     connection.onicecandidate = (event)=>{
-      if(event.candidate){
-        const $ = require('jquery')
-        console.log(event.candidate.candidate)
-      }
+      if(event.candidate)
+        onCandidate(event.candidate.candidate)
     }
     connection.addStream(stream)
     connection.createOffer(offerOptions).then((desc)=>{
@@ -38,4 +38,7 @@ function logError(error) {
   console.log('navigator.getUserMedia error: ', error)
 }
 
-navigator.getUserMedia(constraints, displayVideo, logError);
+module.exports = (onReady)=>{
+  onCandidate = onReady
+  navigator.getUserMedia(constraints, displayVideo, logError);
+}

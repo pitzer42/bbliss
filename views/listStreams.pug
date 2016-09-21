@@ -2,4 +2,5 @@ h1 Fluxo
 ul
 ul
   each stream in streams.length ? streams : [{title: 'There are no active streams'}]
-    li= stream.title
+    li
+      a(href='/app/' + stream.title) #{stream.title}

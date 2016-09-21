@@ -6,8 +6,8 @@ function GeolocationAPI(onLocalized){
 }
 
 module.exports = function(onLocalized){
-  onLocalized({loc:'here'})
-  /*
+  //onLocalized({loc:'here'})
+  ///*
   const fallback = ()=>{
     GeolocationAPI(onLocalized);
   };
@@ -15,5 +15,5 @@ module.exports = function(onLocalized){
       navigator.geolocation.getCurrentPosition(onLocalized, fallback);
   else
     fallback();
-  */
+  //*/
 };

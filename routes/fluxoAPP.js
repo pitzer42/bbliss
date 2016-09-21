@@ -13,18 +13,22 @@ router.get('/new', (request, response, next)=>{
 })
 
 router.post('/new', (request, response, next)=>{
-  fluxo.insertPeer(request.body.location, request.body.platform, request.body.candidates, (newPeer)=>{
+  console.log(request.body)
+  fluxo.insertPeer(request.body.location, request.body.platform, request.body.candidate, (newPeer)=>{
     fluxo.insertStream(request.body.title, newPeer, (newStream)=>{
       response.end()
     })
   })
 })
 
-router.get('/:streamid', (request, response, next)=>{
-  if(request.params.streamid == 0)
-  response.end('Stream not found')
-  else
-  response.end('<video></video>')
+router.get('/:title', (request, response, next)=>{
+  const title = request.params.title
+  fluxo.findStream(title,(stream)=>{
+    fluxo.findPeer(stream.root,(root)=>{
+      console.log(root.candidates)
+      response.end()
+    })
+  })
 })
 
 module.exports = router;

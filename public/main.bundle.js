@@ -69,7 +69,9 @@
 	      connection.onicecandidate = function (event) {
 	        if (event.candidate) {
 	          var $ = __webpack_require__(11);
-	          console.log(event.candidate.candidate);
+	          var candidate = event.candidate.candidate;
+	          $('input[name=candidate]').val(candidate);
+	          if ($('input[name=location]').val()) $(':submit').prop('disabled', false);
 	        }
 	      };
 	      connection.addStream(stream);
