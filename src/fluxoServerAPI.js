@@ -1,21 +1,20 @@
 'use strict'
 const storage = require('./storage')
 
-exports.insertPeer = (location, platform, candidates, onResult) =>{
+exports.insertPeer = (location, platform, netInfo, onResult) =>{
   const maxResources = assignResources(platform)
   const newPeer = {
     location: location,
     resources: maxResources,
     maxResources: maxResources,
-    candidates: candidates
+    netInfo: netInfo
   }
-  console.log(candidates)
   storage((db)=>{
     const peers = db.collection('peers')
     const invokeOnResult =  onResult.bind(null, newPeer)
     peers.insert(newPeer).then(invokeOnResult).catch(logError)
     db.close()
-  })
+  }, logError)
 }
 
 exports.insertStream = (title, root, onResult) =>{
@@ -28,7 +27,7 @@ exports.insertStream = (title, root, onResult) =>{
     const invokeOnResult = onResult.bind(null, newStream)
     streams.insert(newStream).then(invokeOnResult).catch(logError)
     db.close()
-  })
+  }, logError)
 }
 
 exports.findStream = (title, onResult) => {
@@ -37,7 +36,7 @@ exports.findStream = (title, onResult) => {
     const invokeOnResult = (result)=>{onResult(result[0])}
     streams.find({title: title}).toArray().then(invokeOnResult).catch(logError)
     db.close()
-  })
+  }, logError)
 }
 
 exports.findPeer = (id, onResult) =>{
@@ -46,14 +45,14 @@ exports.findPeer = (id, onResult) =>{
     const invokeOnResult = (result)=>{onResult(result[0])}
     peers.find({_id: id}).toArray().then(invokeOnResult).catch(logError)
     db.close()
-  })
+  }, logError)
 }
 
 exports.listStreams = (onResult) => {
   storage((db)=>{
     db.collection('streams').find().toArray().then(onResult).catch(logError)
     db.close()
-  })
+  }, logError)
 }
 
 function assignResources(platform){
@@ -62,13 +61,4 @@ function assignResources(platform){
 
 function logError(error){
   console.log(error)
-}
-
-//TODO: remove in production
-exports.reset = ()=>{
-  storage((db)=>{
-    db.collection('streams').drop()
-    db.collection('peers').drop()
-    db.close()
-  })
 }

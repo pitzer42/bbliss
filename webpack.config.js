@@ -1,7 +1,7 @@
 module.exports = {
   entry:{
-    //main: './src/main.js',
-    newStream: './src/newStream.js'
+    receiver: './src/receiver.js',
+    sender: './src/newStream.js'
   },
   output: {
     path: './public',

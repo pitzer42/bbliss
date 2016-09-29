@@ -7,8 +7,8 @@ router.get('/', (request, response, next)=>{
   })
 })
 
-router.get('/:streamId', (request, response, next)=>{
-  fluxo.findStream(request.params.streamId, (result)=>{
+router.get('/:title', (request, response, next)=>{
+  fluxo.findStream(request.params.title, (result)=>{
     response.json(result)
   })
 })

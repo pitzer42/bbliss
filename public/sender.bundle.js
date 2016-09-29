@@ -48,46 +48,56 @@
 
 	var $ = __webpack_require__(1);
 	var localizer = __webpack_require__(2);
-	var capture = __webpack_require__(3);
+	var sender = __webpack_require__(3);
 
-	$(':submit').prop('disabled', true);
+	var submitButton = $(':button');
+	var form = $('form[name="streamForm"]');
+	var titleInput = $('input[name=title]');
+	var platformInput = $('input[name=platform]');
+	var locationInput = $('input[name=location]');
+	var netInfoInput = $('input[name=netInfo]');
+	var subtitle = $('h2');
 
-	$('input[name=platform]').val(navigator.platform);
+	function enableSubmitButton() {
+	  submitButton.prop('disabled', false);
+	}
 
-	localizer(function (location) {
-	    $('input[name=location]').val(location);
-	    capture(function (candidate) {
-	        $('input[name=candidate]').val(candidate);
-	        $(':submit').prop('disabled', false);
+	function disableSubmitButton() {
+	  submitButton.prop('disabled', true);
+	}
+
+	function postForm() {
+	  disableSubmitButton();
+	  $.ajax({
+	    url: form.attr('action'),
+	    type: "POST",
+	    data: form.serialize(),
+	    success: streamingUI,
+	    error: function error(jXHR, textStatus, _error) {
+	      console.log('form error: ' + _error);
+	    }
+	  });
+	}
+
+	function streamingUI() {
+	  subtitle.text(titleInput.val());
+	  form.remove();
+	}
+
+	function fillHiddenInputs() {
+	  platformInput.val(navigator.platform);
+	  localizer(function (location) {
+	    locationInput.val(location);
+	    sender(function (netinfo) {
+	      netInfoInput.val(netinfo);
+	      enableSubmitButton();
 	    });
-	});
+	  });
+	}
 
-	/*
-	$(':submit').click((event)=>{
-	console.log($('form#streamForm'))
-	console.log($('form#streamForm').serialize())
-	$.post('/app/new', $('form#streamForm').serialize())
-	$(':submit').prop('disabled', true)
-	event.preventDefault()
-	})
-	*/
-
-	$(document).ready(function () {
-	    $('#streamForm').on('submit', function (e) {
-	        e.preventDefault();
-	        $.ajax({
-	            url: $(this).attr('action') || window.location.pathname,
-	            type: "POST",
-	            data: $(this).serialize(),
-	            success: function success(data) {
-	                console.log('streaming...');
-	            },
-	            error: function error(jXHR, textStatus, errorThrown) {
-	                alert(errorThrown);
-	            }
-	        });
-	    });
-	});
+	disableSubmitButton();
+	fillHiddenInputs();
+	submitButton.click(postForm);
 
 /***/ },
 /* 1 */
@@ -10200,50 +10210,91 @@
 
 	'use strict';
 
-	__webpack_require__(4);
+	var _stringify = __webpack_require__(4);
 
+	var _stringify2 = _interopRequireDefault(_stringify);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	__webpack_require__(7);
+
+	var servers = null;
 	var constraints = {
 	  audio: false,
 	  video: true
 	};
 
-	var offerOptions = {
-	  offerToReceiveAudio: 1,
-	  offerToReceiveVideo: 1
-	};
+	var connection = new RTCPeerConnection(servers);
+	var localCandidatets = [];
+	var localDescription = false;
+	var onReady = null;
 
-	var onCandidate = null;
+	function onStream(stream) {
+	  displayVideo(stream);
+	  connection.onicecandidate = addLocalCandidate;
+	  connection.addStream(stream);
+	  connection.createOffer(onLocalDescription, logError);
+	}
 
 	function displayVideo(stream) {
 	  var video = document.querySelector('video');
-	  window.stream = stream; // stream available to console
-	  if (window.URL) {
-	    (function () {
-	      video.src = window.URL.createObjectURL(stream);
-	      var servers = null;
-	      var connection = new RTCPeerConnection(servers);
-	      connection.onicecandidate = function (event) {
-	        if (event.candidate) onCandidate(event.candidate.candidate);
-	      };
-	      connection.addStream(stream);
-	      connection.createOffer(offerOptions).then(function (desc) {
-	        connection.setLocalDescription(desc);
-	      });
-	    })();
-	  } else video.src = stream;
+	  video.src = window.URL.createObjectURL(stream);
 	}
+
+	function addLocalCandidate(event) {
+	  if (event.candidate) localCandidatets.push(event.candidate);
+	}
+
+	function onLocalDescription(description) {
+	  localDescription = description;
+	  connection.setLocalDescription(localDescription);
+	  //Wait for more candidates
+	  setTimeout(onReady, 1000);
+	}
+
+	function getNetInfoJSON() {
+	  return (0, _stringify2.default)({
+	    candidates: localCandidatets,
+	    description: localDescription
+	  });
+	}
+
+	module.exports = function (onready) {
+	  onReady = function onReady() {
+	    onready(getNetInfoJSON());
+	  };
+	  navigator.getUserMedia(constraints, onStream, logError);
+	};
 
 	function logError(error) {
-	  console.log('navigator.getUserMedia error: ', error);
+	  console.log('sender error: ', error);
 	}
-
-	module.exports = function (onReady) {
-	  onCandidate = onReady;
-	  navigator.getUserMedia(constraints, displayVideo, logError);
-	};
 
 /***/ },
 /* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(5), __esModule: true };
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(6)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10260,12 +10311,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(5).log;
-	  var browserDetails = __webpack_require__(5).browserDetails;
+	  var logging = __webpack_require__(8).log;
+	  var browserDetails = __webpack_require__(8).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(5).extractVersion;
-	  module.exports.disableLog = __webpack_require__(5).disableLog;
+	  module.exports.extractVersion = __webpack_require__(8).extractVersion;
+	  module.exports.disableLog = __webpack_require__(8).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10274,10 +10325,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(6) || null;
-	  var edgeShim = __webpack_require__(8) || null;
-	  var firefoxShim = __webpack_require__(11) || null;
-	  var safariShim = __webpack_require__(13) || null;
+	  var chromeShim = __webpack_require__(9) || null;
+	  var edgeShim = __webpack_require__(11) || null;
+	  var firefoxShim = __webpack_require__(14) || null;
+	  var safariShim = __webpack_require__(16) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10341,7 +10392,7 @@
 
 
 /***/ },
-/* 5 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/*
@@ -10478,7 +10529,7 @@
 
 
 /***/ },
-/* 6 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10491,8 +10542,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(5).log;
-	var browserDetails = __webpack_require__(5).browserDetails;
+	var logging = __webpack_require__(8).log;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -10739,12 +10790,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(7)
+	  shimGetUserMedia: __webpack_require__(10)
 	};
 
 
 /***/ },
-/* 7 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10756,7 +10807,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(5).log;
+	var logging = __webpack_require__(8).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -10939,7 +10990,7 @@
 
 
 /***/ },
-/* 8 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10952,8 +11003,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(9);
-	var browserDetails = __webpack_require__(5).browserDetails;
+	var SDPUtils = __webpack_require__(12);
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12011,12 +12062,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(10)
+	  shimGetUserMedia: __webpack_require__(13)
 	};
 
 
 /***/ },
-/* 9 */
+/* 12 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12513,7 +12564,7 @@
 
 
 /***/ },
-/* 10 */
+/* 13 */
 /***/ function(module, exports) {
 
 	/*
@@ -12551,7 +12602,7 @@
 
 
 /***/ },
-/* 11 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12564,7 +12615,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(5).browserDetails;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12707,12 +12758,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(12)
+	  shimGetUserMedia: __webpack_require__(15)
 	};
 
 
 /***/ },
-/* 12 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12725,8 +12776,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(5).log;
-	var browserDetails = __webpack_require__(5).browserDetails;
+	var logging = __webpack_require__(8).log;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -12868,7 +12919,7 @@
 
 
 /***/ },
-/* 13 */
+/* 16 */
 /***/ function(module, exports) {
 
 	/*

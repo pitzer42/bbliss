@@ -35,32 +35,3 @@ describe('Fluxo API', ()=>{
     })
   })
 })
-
-/*
-describe('GET /:streamId', ()=>{
-  describe(':streamId does not exist', ()=>{
-    const nonExistantStreamSufix = '/0'
-    it('returns null', (done)=>{
-      request.get(url+nonExistantStreamSufix, (error, response, body)=>{
-        expect(body).toBe(null)
-        done()
-      })
-    })
-  })
-  describe(':streamId exists', ()=>{
-    const existantStreamSufix = '/' + newStream._id
-    it('returns a page with a video element', (done)=>{
-      request.get(url+existantStreamSufix, (error, response, body)=>{
-        expect(body).toContain('</video>')
-        done()
-      })
-    })
-    it('creates a peer', (done)=>{
-      done()
-    })
-    it('connects parent and child on a tree', (done)=>{
-      done()
-    })
-  })
-})
-*/

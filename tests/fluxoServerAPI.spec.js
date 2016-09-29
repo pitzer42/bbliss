@@ -5,7 +5,7 @@ const fluxo = require('../src/fluxoServerAPI')
 jasmine.getEnv().defaultTimeoutInterval = 20000;
 
 describe('Fluxo Server API', ()=>{
-  const streamTitle = 'test'
+  const streamTitle = 'test test'
   it('inserts peers', (done)=>{
     fluxo.insertPeer('here', 'linux', 'udp:123', (newPeer)=>{
       expect(newPeer._id).toBeDefined()
@@ -16,6 +16,13 @@ describe('Fluxo Server API', ()=>{
     const root = {_id: 0}
     fluxo.insertStream(streamTitle, root, (newStream)=>{
       expect(newStream._id).toBeDefined()
+      done()
+    })
+  })
+  it('replace spaces by underlines on stream titles',(done)=>{
+    fluxo.insertStream(streamTitle, root, (newStream)=>{
+      expect(newStream.title).not.toContain(' ')
+      expect(newStream.title).toContain('_')
       done()
     })
   })

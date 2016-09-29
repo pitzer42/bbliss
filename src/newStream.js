@@ -1,42 +1,52 @@
 const $ = require('jquery')
 const localizer = require('./localizer')
-const capture = require('./capture')
+const sender = require('./sender')
 
-$(':submit').prop('disabled', true)
+const submitButton = $(':button')
+const form = $('form[name="streamForm"]')
+const titleInput = $('input[name=title]')
+const platformInput = $('input[name=platform]')
+const locationInput = $('input[name=location]')
+const netInfoInput = $('input[name=netInfo]')
+const subtitle = $('h2')
 
-$('input[name=platform]').val(navigator.platform)
+function enableSubmitButton(){
+  submitButton.prop('disabled', false)
+}
 
-localizer((location)=>{
-  $('input[name=location]').val(location)
-  capture((candidate)=>{
-    $('input[name=candidate]').val(candidate)
-    $(':submit').prop('disabled', false)
+function disableSubmitButton(){
+  submitButton.prop('disabled', true)
+}
+
+function postForm(){
+  disableSubmitButton()
+  $.ajax({
+    url : form.attr('action'),
+    type: "POST",
+    data: form.serialize(),
+    success: streamingUI,
+    error: function (jXHR, textStatus, error) {
+      console.log('form error: ' + error);
+    }
   })
-})
+}
 
-/*
-$(':submit').click((event)=>{
-console.log($('form#streamForm'))
-console.log($('form#streamForm').serialize())
-$.post('/app/new', $('form#streamForm').serialize())
-$(':submit').prop('disabled', true)
-event.preventDefault()
-})
-*/
+function streamingUI(){
+  subtitle.text(titleInput.val())
+  form.remove()
+}
 
-$(document).ready(function () {
-    $('#streamForm').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url : $(this).attr('action') || window.location.pathname,
-            type: "POST",
-            data: $(this).serialize(),
-            success: function (data) {
-                console.log('streaming...')
-            },
-            error: function (jXHR, textStatus, errorThrown) {
-                alert(errorThrown);
-            }
-        });
-    });
-});
+function fillHiddenInputs(){
+  platformInput.val(navigator.platform)
+  localizer((location)=>{
+    locationInput.val(location)
+    sender((netinfo)=>{
+      netInfoInput.val(netinfo)
+      enableSubmitButton()
+    })
+  })
+}
+
+disableSubmitButton()
+fillHiddenInputs()
+submitButton.click(postForm)
