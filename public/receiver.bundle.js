@@ -40,15 +40,19 @@
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var $ = __webpack_require__(1);
+	var $ = __webpack_require__(16);
 	var servers = null;
+
 	var netInfo = JSON.parse($('input[name=netInfo]').val());
+	var candidates = netInfo.candidates;
+	var description = new RTCSessionDescription(netInfo.description);
 	var connection = new RTCPeerConnection(servers);
 	var localCandidates = [];
 
@@ -58,22 +62,25 @@
 	  video.src = streamURL;
 	};
 
-	connection.onicecandidate = function (event) {
-	  if (event.candidate) localCandidates.push(event.candidate);
-	};
+	connection.onicecandidate = addLocalCandidate;
 
-	var candidates = netInfo.candidates;
+	function addLocalCandidate(event) {
+	  if (event.candidate) {
+	    localCandidates.push(event.candidate);
+	  }
+	}
+
 	for (var i = 0; i < candidates.length; i++) {
 	  var candidate = new RTCIceCandidate(candidates[i]);
 	  connection.addIceCandidate(candidate);
 	}
 
-	var description = new RTCSessionDescription(netInfo.description);
 	connection.setRemoteDescription(description);
 
 	connection.createAnswer(onAnswerSuccess, onAnswerError);
 
 	function onAnswerSuccess(description) {
+	  console.log('onAnswerSuccess');
 	  connection.setLocalDescription(description);
 	}
 
@@ -82,7 +89,8 @@
 	}
 
 /***/ },
-/* 1 */
+
+/***/ 16:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*eslint-disable no-unused-vars*/
@@ -10162,4 +10170,5 @@
 
 
 /***/ }
-/******/ ]);
+
+/******/ });

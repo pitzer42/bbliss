@@ -1,19 +1,26 @@
-function GeolocationAPI(onLocalized){
-  const $ = require('jquery');
-  const api_url = 'http://ipinfo.io/json';
+function geolocationAPI(onLocalized){
+  const $ = require('jquery')
+  const api_url = 'http://ipinfo.io/json'
   const onResponse = (response)=>{onLocalized(response.loc)}
-  $.get(api_url, onResponse);
+  $.get(api_url, onResponse)
+}
+
+function parseLocation(position){
+  return position.coords.latitude + ',' + position.coords.longitude
 }
 
 module.exports = function(onLocalized){
-  //onLocalized({loc:'here'})
+  //onLocalized({loc:'0,0'})
   ///*
   const fallback = ()=>{
-    GeolocationAPI(onLocalized);
-  };
-  if (navigator.geolocation)
-      navigator.geolocation.getCurrentPosition(onLocalized, fallback);
-  else
-    fallback();
+    geolocationAPI(onLocalized);
+  }
+  const html5Geolocation = position=>{
+    onLocalized(parseLocation(position))
+  }
+  if (navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(html5Geolocation, fallback)
+  }else
+  fallback()
   //*/
 };

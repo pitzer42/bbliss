@@ -1,56 +1,24 @@
-'use strict';
-
-require('webrtc-adapter')
-
-const servers = null
 const constraints = {
   audio: false,
   video: true
-};
-
-let connection = new RTCPeerConnection(servers)
-let localCandidatets = []
-let localDescription = false
-let onReady = null
-
-function onStream(stream) {
-  displayVideo(stream)
-  connection.onicecandidate = addLocalCandidate
-  connection.addStream(stream)
-  connection.createOffer(onLocalDescription, logError)
 }
+const servers = null
 
-function displayVideo(stream){
+const Peer = require('./peer')
+const peer = new Peer(servers, constraints)
+
+peer.onStreamURL = streamURL =>{
   const video = document.querySelector('video')
-  video.src = window.URL.createObjectURL(stream)
+  video.src = streamURL
 }
 
-function addLocalCandidate(event){
-  if(event.candidate)
-    localCandidatets.push(event.candidate)
+peer.onError = error =>{
+  console.log('sender error: ' + error)
 }
 
-function onLocalDescription(description){
-  localDescription = description
-  connection.setLocalDescription(localDescription)
-  //Wait for more candidates
-  setTimeout(onReady, 1000)
-}
-
-function getNetInfoJSON(){
-  return JSON.stringify({
-    candidates: localCandidatets,
-    description: localDescription
-  })
-}
-
-module.exports = (onready)=>{
-  onReady = ()=>{
-    onready(getNetInfoJSON())
+module.exports = (onReady)=>{
+  peer.onNetInfo = netInfo =>{
+    onReady(netInfo)
   }
-  navigator.getUserMedia(constraints, onStream, logError);
-}
-
-function logError(error) {
-  console.log('sender error: ', error)
+  peer.start()
 }

@@ -1,6 +1,9 @@
 const $ = require('jquery')
 const servers = null
+
 const netInfo = JSON.parse($('input[name=netInfo]').val())
+const candidates = netInfo.candidates
+const description = new RTCSessionDescription(netInfo.description)
 const connection = new RTCPeerConnection(servers)
 const localCandidates = []
 
@@ -10,23 +13,25 @@ connection.ontrack = (event)=>{
   video.src = streamURL
 }
 
-connection.onicecandidate = (event)=>{
-  if(event.candidate)
+connection.onicecandidate = addLocalCandidate
+
+function addLocalCandidate(event){
+  if(event.candidate){
     localCandidates.push(event.candidate)
+  }
 }
 
-const candidates = netInfo.candidates
 for(let i = 0; i < candidates.length; i++){
   let candidate = new RTCIceCandidate(candidates[i])
   connection.addIceCandidate(candidate)
 }
 
-const description = new RTCSessionDescription(netInfo.description)
 connection.setRemoteDescription(description)
 
 connection.createAnswer(onAnswerSuccess, onAnswerError)
 
 function onAnswerSuccess(description){
+  console.log('onAnswerSuccess')
   connection.setLocalDescription(description)
 }
 
