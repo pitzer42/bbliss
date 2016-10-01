@@ -1,10 +1,10 @@
+const Peer = require('peer')
+
 const constraints = {
   audio: false,
   video: true
 }
 const servers = null
-
-const Peer = require('peer')
 const peer = new Peer(servers, constraints)
 
 peer.onStreamURL = streamURL =>{
@@ -17,8 +17,6 @@ peer.onError = error =>{
 }
 
 module.exports = (onReady)=>{
-  peer.onNetInfo = netInfo =>{
-    onReady(netInfo)
-  }
-  peer.start()
+  peer.onNetInfo = onReady
+  peer.offer()
 }

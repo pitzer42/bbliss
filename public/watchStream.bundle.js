@@ -47,57 +47,60 @@
 	'use strict';
 
 	var $ = __webpack_require__(1);
-	var localizer = __webpack_require__(2);
-	var sender = __webpack_require__(3);
 
-	var submitButton = $(':button');
-	var form = $('form[name="streamForm"]');
-	var titleInput = $('input[name=title]');
-	var platformInput = $('input[name=platform]');
-	var locationInput = $('input[name=location]');
-	var netInfoInput = $('input[name=netInfo]');
-	var subtitle = $('h2');
+	var Peer = __webpack_require__(4);
+	var peer = new Peer();
+	var netInfo = JSON.parse($('input[name=netInfo]').val());
+	peer.onError = function (error) {
+	  console.log(error);
+	};
+	peer.remoteCandidates = netInfo.candidates;
+	peer.remoteDescription = new RTCSessionDescription(netInfo.description);
 
-	function enableSubmitButton() {
-	  submitButton.prop('disabled', false);
+	peer.onStreamURL = function (streamURL) {
+	  var video = document.querySelector('video');
+	  video.src = streamURL;
+	};
+
+	peer.answer();
+
+	/*
+	const servers = null
+	const connection = new RTCPeerConnection(servers)
+	const localCandidates = []
+
+	connection.ontrack = (event)=>{
+	  const streamURL = window.URL.createObjectURL(event.streams[0])
+	  const video = document.querySelector('video')
+	  video.src = streamURL
 	}
 
-	function disableSubmitButton() {
-	  submitButton.prop('disabled', true);
+	connection.onicecandidate = addLocalCandidate
+
+	function addLocalCandidate(event){
+	  if(event.candidate){
+	    localCandidates.push(event.candidate)
+	  }
 	}
 
-	function postForm() {
-	  disableSubmitButton();
-	  $.ajax({
-	    url: form.attr('action'),
-	    type: "POST",
-	    data: form.serialize(),
-	    success: streamingUI,
-	    error: function error(jXHR, textStatus, _error) {
-	      console.log('form error: ' + _error);
-	    }
-	  });
+	for(let i = 0; i < candidates.length; i++){
+	  let candidate = new RTCIceCandidate(candidates[i])
+	  connection.addIceCandidate(candidate)
 	}
 
-	function streamingUI() {
-	  subtitle.text(titleInput.val());
-	  form.remove();
+	connection.setRemoteDescription(description)
+
+	connection.createAnswer(onAnswerSuccess, onAnswerError)
+
+	function onAnswerSuccess(description){
+	  console.log('onAnswerSuccess')
+	  connection.setLocalDescription(description)
 	}
 
-	function fillHiddenInputs() {
-	  platformInput.val(navigator.platform);
-	  localizer(function (location) {
-	    locationInput.val(location);
-	    sender(function (netinfo) {
-	      netInfoInput.val(netinfo);
-	      enableSubmitButton();
-	    });
-	  });
+	function onAnswerError(error){
+	  console.logError(error)
 	}
-
-	disableSubmitButton();
-	fillHiddenInputs();
-	submitButton.click(postForm);
+	*/
 
 /***/ },
 /* 1 */
@@ -10180,71 +10183,8 @@
 
 
 /***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	function geolocationAPI(onLocalized) {
-	  var $ = __webpack_require__(1);
-	  var api_url = 'http://ipinfo.io/json';
-	  var onResponse = function onResponse(response) {
-	    onLocalized(response.loc);
-	  };
-	  $.get(api_url, onResponse);
-	}
-
-	function parseLocation(position) {
-	  return position.coords.latitude + ',' + position.coords.longitude;
-	}
-
-	module.exports = function (onLocalized) {
-	  //onLocalized({loc:'0,0'})
-	  ///*
-	  var fallback = function fallback() {
-	    geolocationAPI(onLocalized);
-	  };
-	  var html5Geolocation = function html5Geolocation(position) {
-	    onLocalized(parseLocation(position));
-	  };
-	  if (navigator.geolocation) {
-	    navigator.geolocation.getCurrentPosition(html5Geolocation, fallback);
-	  } else fallback();
-	  //*/
-	};
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var constraints = {
-	  audio: false,
-	  video: true
-	};
-	var servers = null;
-
-	var Peer = __webpack_require__(4);
-	var peer = new Peer(servers, constraints);
-
-	peer.onStreamURL = function (streamURL) {
-	  var video = document.querySelector('video');
-	  video.src = streamURL;
-	};
-
-	peer.onError = function (error) {
-	  console.log('sender error: ' + error);
-	};
-
-	module.exports = function (onReady) {
-	  peer.onNetInfo = function (netInfo) {
-	    onReady(netInfo);
-	  };
-	  peer.start();
-	};
-
-/***/ },
+/* 2 */,
+/* 3 */,
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -10262,6 +10202,8 @@
 
 	__webpack_require__(9);
 
+	var nullf = function nullf() {};
+
 	module.exports = function Peer(servers, mediaConstraints) {
 	  var _this = this;
 
@@ -10269,9 +10211,13 @@
 
 	  var connection = new RTCPeerConnection(servers);
 	  var localCandidates = [];
-	  this.onError = this.onStreamURL = this.onNetInfo = function () {};
+	  this.onError = nullf;
+	  this.onStreamURL = nullf;
+	  this.onNetInfo = nullf;
+	  this.remoteDescription = null;
+	  this.remoteCandidates = null;
 
-	  this.start = function () {
+	  this.offer = function () {
 	    navigator.getUserMedia(mediaConstraints, onStreamReady, _this.onError);
 	  };
 
@@ -10292,6 +10238,25 @@
 	      candidates: localCandidates,
 	      description: connection.localDescription
 	    });
+	  };
+
+	  this.answer = function () {
+	    connection.onaddstream = function (event) {
+	      var streamURL = window.URL.createObjectURL(event.stream);
+	      _this.onStreamURL(streamURL);
+	    };
+	    connection.setRemoteDescription(_this.remoteDescription);
+	    console.log('answering...');
+	    connection.createAnswer(function (description) {
+	      connection.setLocalDescription(description);
+	      console.log((0, _stringify2.default)(description));
+	    }, _this.onError);
+	  };
+
+	  window.hack = function (description) {
+	    console.log('setting remote description');
+	    var desc = new RTCSessionDescription(description);
+	    connection.setRemoteDescription(desc);
 	  };
 	};
 

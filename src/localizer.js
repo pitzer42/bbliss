@@ -18,9 +18,9 @@ module.exports = function(onLocalized){
   const html5Geolocation = position=>{
     onLocalized(parseLocation(position))
   }
-  if (navigator.geolocation){
+  if (navigator.geolocation)
     navigator.geolocation.getCurrentPosition(html5Geolocation, fallback)
-  }else
+  else
   fallback()
   //*/
 };

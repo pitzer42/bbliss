@@ -2,8 +2,8 @@ const path = require('path')
 
 module.exports = {
   entry:{
-    receiver: './src/receiver.js',
-    sender: './src/newStream.js'
+    watchStream: 'controller/watchStream.js',
+    createStream: 'controller/createStream.js',
   },
   output: {
     path: './public',
@@ -19,7 +19,7 @@ module.exports = {
     ]
   },
   resolve: {
-    root: path.resolve('./src'),
+    root: path.resolve('src'),
     extensions: ['', '.js', '.json']
   }
-};
+}

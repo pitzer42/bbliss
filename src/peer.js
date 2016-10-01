@@ -1,14 +1,18 @@
-'use strict'
-
 require('webrtc-adapter')
+
+const nullf = ()=>{}
 
 module.exports = class Peer {
   constructor(servers, mediaConstraints) {
     const connection = new RTCPeerConnection(servers)
     const localCandidates = []
-    this.onError = this.onStreamURL = this.onNetInfo = ()=>{}
+    this.onError = nullf
+    this.onStreamURL = nullf
+    this.onNetInfo = nullf
+    this.remoteDescription = null
+    this.remoteCandidates = null
 
-    this.start = ()=>{
+    this.offer = ()=>{
       navigator.getUserMedia(mediaConstraints, onStreamReady, this.onError)
     }
 
@@ -22,9 +26,9 @@ module.exports = class Peer {
 
     connection.onicecandidate = event=>{
       if(event.candidate)
-        localCandidates.push(event.candidate)
+      localCandidates.push(event.candidate)
       else
-        this.onNetInfo(netInfoJSON())
+      this.onNetInfo(netInfoJSON())
     }
 
     const netInfoJSON = ()=>{
@@ -32,6 +36,27 @@ module.exports = class Peer {
         candidates: localCandidates,
         description: connection.localDescription
       })
+    }
+
+
+    this.answer = ()=>{
+      connection.onaddstream = event =>{
+        const streamURL = window.URL.createObjectURL(event.stream)
+        this.onStreamURL(streamURL)
+      }
+      connection.setRemoteDescription(this.remoteDescription)
+      console.log('answering...')
+      connection.createAnswer(description=>{
+        connection.setLocalDescription(description)
+        console.log(JSON.stringify(description))
+      }, this.onError)
+    }
+
+
+    window.hack = description =>{
+      console.log('setting remote description')
+      const desc = new RTCSessionDescription(description)
+      connection.setRemoteDescription(desc)
     }
   }
 }

@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const path = require('path')
-const fluxo = require('fluxoServerAPI')
+const fluxo = require('./fluxoServerAPI')
 
 router.get('/', (request, response, next)=>{
   fluxo.listStreams((results)=>{
@@ -9,7 +9,7 @@ router.get('/', (request, response, next)=>{
 })
 
 router.get('/new', (request, response, next)=>{
-  response.render('sender.pug')
+  response.render('createStream.pug')
 })
 
 router.post('/new', (request, response, next)=>{
@@ -24,7 +24,7 @@ router.get('/:title', (request, response, next)=>{
   const title = request.params.title
   fluxo.findStream(title,(stream)=>{
     fluxo.findPeer(stream.root,(root)=>{
-      response.render('receiver.pug', {netInfo: root.netInfo})
+      response.render('watchStream.pug', {netInfo: root.netInfo})
     })
   })
 })

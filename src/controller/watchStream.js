@@ -1,9 +1,21 @@
 const $ = require('jquery')
-const servers = null
 
+const Peer = require('peer')
+const peer = new Peer()
 const netInfo = JSON.parse($('input[name=netInfo]').val())
-const candidates = netInfo.candidates
-const description = new RTCSessionDescription(netInfo.description)
+peer.onError = error=>{console.log(error)}
+peer.remoteCandidates = netInfo.candidates
+peer.remoteDescription = new RTCSessionDescription(netInfo.description)
+
+peer.onStreamURL = streamURL =>{
+  const video = document.querySelector('video')
+  video.src = streamURL
+}
+
+peer.answer()
+
+/*
+const servers = null
 const connection = new RTCPeerConnection(servers)
 const localCandidates = []
 
@@ -38,3 +50,4 @@ function onAnswerSuccess(description){
 function onAnswerError(error){
   console.logError(error)
 }
+*/

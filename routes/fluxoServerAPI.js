@@ -1,5 +1,5 @@
 'use strict'
-const storage = require('src/storage')
+const storage = require('./storage')
 
 exports.insertPeer = (location, platform, netInfo, onResult) =>{
   const maxResources = assignResources(platform)
