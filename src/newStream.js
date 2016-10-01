@@ -1,6 +1,6 @@
 const $ = require('jquery')
-const localizer = require('./localizer')
-const sender = require('./sender')
+const localizer = require('localizer')
+const sender = require('sender')
 
 const submitButton = $(':button')
 const form = $('form[name="streamForm"]')

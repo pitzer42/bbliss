@@ -1,6 +1,6 @@
 'use strict'
-const storage = require('../src/storage')
-const fluxo = require('../src/fluxoServerAPI')
+const storage = require('src/storage')
+const fluxo = require('src/fluxoServerAPI')
 
 jasmine.getEnv().defaultTimeoutInterval = 20000;
 

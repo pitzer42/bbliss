@@ -1,7 +1,7 @@
 'use strict'
 const url = 'http://localhost:3000/api'
 const request = require('request')
-const fluxo = require('../src/fluxoServerAPI')
+const fluxo = require('src/fluxoServerAPI')
 
 jasmine.getEnv().defaultTimeoutInterval = 20000;
 

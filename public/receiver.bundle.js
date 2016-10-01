@@ -40,14 +40,13 @@
 /******/ 	return __webpack_require__(0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 0:
+/******/ ([
+/* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var $ = __webpack_require__(16);
+	var $ = __webpack_require__(1);
 	var servers = null;
 
 	var netInfo = JSON.parse($('input[name=netInfo]').val());
@@ -89,8 +88,7 @@
 	}
 
 /***/ },
-
-/***/ 16:
+/* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*eslint-disable no-unused-vars*/
@@ -10170,5 +10168,4 @@
 
 
 /***/ }
-
-/******/ });
+/******/ ]);

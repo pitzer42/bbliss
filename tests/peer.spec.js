@@ -1,5 +1,5 @@
 'use strict'
-const Peer = require('../src/peer')
+const Peer = require('src/peer')
 describe('Peer', ()=>{
   it('is a class', (done)=>{
     const peer = new Peer()

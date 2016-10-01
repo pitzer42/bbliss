@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = {
   entry:{
     receiver: './src/receiver.js',
@@ -17,6 +19,7 @@ module.exports = {
     ]
   },
   resolve: {
+    root: path.resolve('./src'),
     extensions: ['', '.js', '.json']
   }
 };

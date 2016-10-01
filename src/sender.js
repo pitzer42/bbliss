@@ -4,7 +4,7 @@ const constraints = {
 }
 const servers = null
 
-const Peer = require('./peer')
+const Peer = require('peer')
 const peer = new Peer(servers, constraints)
 
 peer.onStreamURL = streamURL =>{
