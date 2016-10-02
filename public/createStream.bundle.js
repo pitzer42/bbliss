@@ -58,6 +58,23 @@
 	var netInfoInput = $('input[name=netInfo]');
 	var subtitle = $('h2');
 
+	var servers = null;
+	var mediaConstraints = {
+	  audio: false,
+	  video: true
+	};
+	var Root = __webpack_require__(4).Root;
+	var root = new Root(servers, mediaConstraints);
+
+	root.onStreamURL = function (streamURL) {
+	  var video = document.querySelector('video');
+	  video.src = streamURL;
+	};
+
+	root.onError = function (error) {
+	  console.log('root error: ' + error);
+	};
+
 	function enableSubmitButton() {
 	  submitButton.prop('disabled', false);
 	}
@@ -88,10 +105,11 @@
 	  platformInput.val(navigator.platform);
 	  localizer(function (location) {
 	    locationInput.val(location);
-	    sender(function (localDescription) {
+	    root.onNetInfo = function (localDescription) {
 	      netInfoInput.val(localDescription);
 	      enableSubmitButton();
-	    });
+	    };
+	    root.offer();
 	  });
 	}
 

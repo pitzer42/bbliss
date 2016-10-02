@@ -10,6 +10,23 @@ const locationInput = $('input[name=location]')
 const netInfoInput = $('input[name=netInfo]')
 const subtitle = $('h2')
 
+const servers = null
+const mediaConstraints = {
+  audio: false,
+  video: true
+}
+const Root = require('peer').Root
+const root = new Root(servers, mediaConstraints)
+
+root.onStreamURL = streamURL =>{
+  const video = document.querySelector('video')
+  video.src = streamURL
+}
+
+root.onError = error =>{
+  console.log('root error: ' + error)
+}
+
 function enableSubmitButton(){
   submitButton.prop('disabled', false)
 }
@@ -38,12 +55,13 @@ function streamingUI(){
 
 function fillHiddenInputs(){
   platformInput.val(navigator.platform)
-  localizer((location)=>{
+  localizer(location=>{
     locationInput.val(location)
-    sender((localDescription)=>{
+    root.onNetInfo = localDescription =>{
       netInfoInput.val(localDescription)
       enableSubmitButton()
-    })
+    }
+    root.offer()
   })
 }
 
