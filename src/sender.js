@@ -1,22 +1,22 @@
-const Peer = require('peer')
+const Root = require('peer').Root
 
 const constraints = {
   audio: false,
   video: true
 }
 const servers = null
-const peer = new Peer(servers, constraints)
+const root = new Root(servers, constraints)
 
-peer.onStreamURL = streamURL =>{
+root.onStreamURL = streamURL =>{
   const video = document.querySelector('video')
   video.src = streamURL
 }
 
-peer.onError = error =>{
-  console.log('sender error: ' + error)
+root.onError = error =>{
+  console.log('root error: ' + error)
 }
 
 module.exports = (onReady)=>{
-  peer.onNetInfo = onReady
-  peer.offer()
+  root.onNetInfo = onReady//root.onLocalDescription = onReady//
+  root.offer()
 }

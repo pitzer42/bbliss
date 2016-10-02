@@ -10,8 +10,8 @@ function parseLocation(position){
 }
 
 module.exports = function(onLocalized){
-  //onLocalized({loc:'0,0'})
-  ///*
+  onLocalized('0,0')
+  /*
   const fallback = ()=>{
     geolocationAPI(onLocalized);
   }

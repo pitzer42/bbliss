@@ -47,22 +47,19 @@
 	'use strict';
 
 	var $ = __webpack_require__(1);
+	var Peer = __webpack_require__(4).Peer;
+	var peer = new Peer(null);
+	var remoteDescription = JSON.parse($('input[name=netInfo]').val());
 
-	var Peer = __webpack_require__(4);
-	var peer = new Peer();
-	var netInfo = JSON.parse($('input[name=netInfo]').val());
 	peer.onError = function (error) {
 	  console.log(error);
 	};
-	peer.remoteCandidates = netInfo.candidates;
-	peer.remoteDescription = new RTCSessionDescription(netInfo.description);
-
 	peer.onStreamURL = function (streamURL) {
 	  var video = document.querySelector('video');
 	  video.src = streamURL;
 	};
 
-	peer.answer();
+	peer.answer(remoteDescription);
 
 	/*
 	const servers = null
@@ -10204,24 +10201,21 @@
 
 	var nullf = function nullf() {};
 
-	module.exports = function Peer(servers, mediaConstraints) {
+	var Root = function Root(servers, mediaConstraints) {
 	  var _this = this;
 
-	  (0, _classCallCheck3.default)(this, Peer);
+	  (0, _classCallCheck3.default)(this, Root);
 
 	  var connection = new RTCPeerConnection(servers);
-	  var localCandidates = [];
-	  this.onError = nullf;
 	  this.onStreamURL = nullf;
 	  this.onNetInfo = nullf;
-	  this.remoteDescription = null;
-	  this.remoteCandidates = null;
+	  this.onError = nullf;
 
 	  this.offer = function () {
-	    navigator.getUserMedia(mediaConstraints, onStreamReady, _this.onError);
+	    navigator.getUserMedia(mediaConstraints, onStream, _this.onError);
 	  };
 
-	  var onStreamReady = function onStreamReady(stream) {
+	  var onStream = function onStream(stream) {
 	    var streamURL = window.URL.createObjectURL(stream);
 	    _this.onStreamURL(streamURL);
 	    connection.addStream(stream);
@@ -10230,35 +10224,43 @@
 	  };
 
 	  connection.onicecandidate = function (event) {
-	    if (event.candidate) localCandidates.push(event.candidate);else _this.onNetInfo(netInfoJSON());
+	    if (event.candidate === null) _this.onNetInfo((0, _stringify2.default)(connection.localDescription));
 	  };
 
-	  var netInfoJSON = function netInfoJSON() {
-	    return (0, _stringify2.default)({
-	      candidates: localCandidates,
-	      description: connection.localDescription
-	    });
-	  };
-
-	  this.answer = function () {
-	    connection.onaddstream = function (event) {
-	      var streamURL = window.URL.createObjectURL(event.stream);
-	      _this.onStreamURL(streamURL);
-	    };
-	    connection.setRemoteDescription(_this.remoteDescription);
-	    console.log('answering...');
-	    connection.createAnswer(function (description) {
-	      connection.setLocalDescription(description);
-	      console.log((0, _stringify2.default)(description));
-	    }, _this.onError);
-	  };
-
-	  window.hack = function (description) {
-	    console.log('setting remote description');
-	    var desc = new RTCSessionDescription(description);
-	    connection.setRemoteDescription(desc);
+	  window.hack2 = function (description) {
+	    connection.setRemoteDescription(new RTCSessionDescription(description));
 	  };
 	};
+
+	var Peer = function Peer(servers) {
+	  var _this2 = this;
+
+	  (0, _classCallCheck3.default)(this, Peer);
+
+	  var connection = new RTCPeerConnection(servers);
+	  this.onError = nullf;
+	  this.onStreamURL = nullf;
+
+	  connection.onaddstream = function (event) {
+	    var streamURL = window.URL.createObjectURL(event.stream);
+	    _this2.onStreamURL(streamURL);
+	  };
+
+	  this.answer = function (remoteDescription) {
+	    connection.setRemoteDescription(remoteDescription);
+	    connection.createAnswer(onLocalDescription, _this2.onError);
+	  };
+
+	  var onLocalDescription = function onLocalDescription(description) {
+	    connection.setLocalDescription(description);
+	    console.log((0, _stringify2.default)(description));
+	  };
+
+	  window.hack = function (description) {};
+	};
+
+	exports.Root = Root;
+	exports.Peer = Peer;
 
 /***/ },
 /* 5 */

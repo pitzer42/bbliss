@@ -1,18 +1,15 @@
 const $ = require('jquery')
+const Peer = require('peer').Peer
+const peer = new Peer(null)
+const remoteDescription = JSON.parse($('input[name=netInfo]').val())
 
-const Peer = require('peer')
-const peer = new Peer()
-const netInfo = JSON.parse($('input[name=netInfo]').val())
 peer.onError = error=>{console.log(error)}
-peer.remoteCandidates = netInfo.candidates
-peer.remoteDescription = new RTCSessionDescription(netInfo.description)
-
 peer.onStreamURL = streamURL =>{
   const video = document.querySelector('video')
   video.src = streamURL
 }
 
-peer.answer()
+peer.answer(remoteDescription)
 
 /*
 const servers = null

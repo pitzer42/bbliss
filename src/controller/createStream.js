@@ -40,8 +40,8 @@ function fillHiddenInputs(){
   platformInput.val(navigator.platform)
   localizer((location)=>{
     locationInput.val(location)
-    sender((netinfo)=>{
-      netInfoInput.val(netinfo)
+    sender((localDescription)=>{
+      netInfoInput.val(localDescription)
       enableSubmitButton()
     })
   })
