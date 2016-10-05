@@ -6,6 +6,7 @@ const form = $('form[name="streamForm"]')
 const titleInput = $('input[name=title]')
 const platformInput = $('input[name=platform]')
 const locationInput = $('input[name=location]')
+const channelInput = $('input[name=channel]')
 const netInfoInput = $('input[name=netInfo]')
 const subtitle = $('h2')
 
@@ -52,6 +53,13 @@ function streamingUI(){
   form.remove()
 }
 
+const socket = io()
+
+socket.on('description', description=>{
+  root.setRemoteDescription(JSON.parse(description))
+})
+
+
 function fillHiddenInputs(){
   platformInput.val(navigator.platform)
   localizer(location=>{
@@ -65,10 +73,10 @@ function fillHiddenInputs(){
 }
 
 disableSubmitButton()
-fillHiddenInputs()
+
 submitButton.click(postForm)
 
-const socket = io()
-socket.on('description', description=>{
-  root.setRemoteDescription(JSON.parse(description))
+socket.on('connect', ()=>{
+  channelInput.val(socket.id)
+  fillHiddenInputs()
 })

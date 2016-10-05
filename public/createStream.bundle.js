@@ -54,6 +54,7 @@
 	var titleInput = $('input[name=title]');
 	var platformInput = $('input[name=platform]');
 	var locationInput = $('input[name=location]');
+	var channelInput = $('input[name=channel]');
 	var netInfoInput = $('input[name=netInfo]');
 	var subtitle = $('h2');
 
@@ -100,6 +101,12 @@
 	  form.remove();
 	}
 
+	var socket = io();
+
+	socket.on('description', function (description) {
+	  root.setRemoteDescription(JSON.parse(description));
+	});
+
 	function fillHiddenInputs() {
 	  platformInput.val(navigator.platform);
 	  localizer(function (location) {
@@ -113,12 +120,12 @@
 	}
 
 	disableSubmitButton();
-	fillHiddenInputs();
+
 	submitButton.click(postForm);
 
-	var socket = io();
-	socket.on('description', function (description) {
-	  root.setRemoteDescription(JSON.parse(description));
+	socket.on('connect', function () {
+	  channelInput.val(socket.id);
+	  fillHiddenInputs();
 	});
 
 /***/ },

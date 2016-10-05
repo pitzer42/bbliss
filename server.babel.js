@@ -17,7 +17,7 @@ app.set('view engine', 'pug')
 app.set('views', './views')
 
 io.on('connection', socket=>{
-  console.log('user connected')
+  console.log(socket.id)
   socket.on('description', description=>{
     io.emit('description', description)
   })
