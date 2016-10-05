@@ -1,6 +1,5 @@
 const $ = require('jquery')
 const localizer = require('localizer')
-const sender = require('sender')
 
 const submitButton = $(':button')
 const form = $('form[name="streamForm"]')
@@ -68,3 +67,8 @@ function fillHiddenInputs(){
 disableSubmitButton()
 fillHiddenInputs()
 submitButton.click(postForm)
+
+const socket = io()
+socket.on('description', description=>{
+  root.setRemoteDescription(JSON.parse(description))
+})

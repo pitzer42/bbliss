@@ -9,4 +9,7 @@ peer.onStreamURL = streamURL =>{
   video.src = streamURL
 }
 
-peer.answer(remoteDescription)
+peer.answer(remoteDescription, description=>{
+  const socket = io()
+  socket.emit('description', description)
+})

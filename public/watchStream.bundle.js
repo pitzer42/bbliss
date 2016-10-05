@@ -47,7 +47,7 @@
 	'use strict';
 
 	var $ = __webpack_require__(1);
-	var Peer = __webpack_require__(4).Peer;
+	var Peer = __webpack_require__(3).Peer;
 	var peer = new Peer(null);
 	var remoteDescription = JSON.parse($('input[name=netInfo]').val());
 
@@ -59,7 +59,10 @@
 	  video.src = streamURL;
 	};
 
-	peer.answer(remoteDescription);
+	peer.answer(remoteDescription, function (description) {
+	  var socket = io();
+	  socket.emit('description', description);
+	});
 
 /***/ },
 /* 1 */
@@ -10143,23 +10146,22 @@
 
 /***/ },
 /* 2 */,
-/* 3 */,
-/* 4 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _stringify = __webpack_require__(5);
+	var _stringify = __webpack_require__(4);
 
 	var _stringify2 = _interopRequireDefault(_stringify);
 
-	var _classCallCheck2 = __webpack_require__(8);
+	var _classCallCheck2 = __webpack_require__(7);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(9);
+	__webpack_require__(8);
 
 	var nullf = function nullf() {};
 
@@ -10189,7 +10191,7 @@
 	    if (event.candidate === null) _this.onNetInfo((0, _stringify2.default)(connection.localDescription));
 	  };
 
-	  window.hack2 = function (description) {
+	  this.setRemoteDescription = function (description) {
 	    connection.setRemoteDescription(new RTCSessionDescription(description));
 	  };
 	};
@@ -10208,47 +10210,44 @@
 	    _this2.onStreamURL(streamURL);
 	  };
 
-	  this.answer = function (remoteDescription) {
+	  this.answer = function (remoteDescription, onLocalDescription) {
 	    connection.setRemoteDescription(remoteDescription);
-	    connection.createAnswer(onLocalDescription, _this2.onError);
+	    connection.createAnswer(function (description) {
+	      connection.setLocalDescription(description);
+	      var descriptionJSON = (0, _stringify2.default)(description);
+	      onLocalDescription(descriptionJSON);
+	    }, _this2.onError);
 	  };
-
-	  var onLocalDescription = function onLocalDescription(description) {
-	    connection.setLocalDescription(description);
-	    console.log((0, _stringify2.default)(description));
-	  };
-
-	  window.hack = function (description) {};
 	};
 
 	exports.Root = Root;
 	exports.Peer = Peer;
 
 /***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(5), __esModule: true };
+
+/***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(6), __esModule: true };
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(7)
+	var core  = __webpack_require__(6)
 	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
 	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
 	  return $JSON.stringify.apply($JSON, arguments);
 	};
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports) {
 
 	var core = module.exports = {version: '2.4.0'};
 	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -10262,7 +10261,7 @@
 	};
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10279,12 +10278,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(10).log;
-	  var browserDetails = __webpack_require__(10).browserDetails;
+	  var logging = __webpack_require__(9).log;
+	  var browserDetails = __webpack_require__(9).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(10).extractVersion;
-	  module.exports.disableLog = __webpack_require__(10).disableLog;
+	  module.exports.extractVersion = __webpack_require__(9).extractVersion;
+	  module.exports.disableLog = __webpack_require__(9).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10293,10 +10292,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(11) || null;
-	  var edgeShim = __webpack_require__(13) || null;
-	  var firefoxShim = __webpack_require__(16) || null;
-	  var safariShim = __webpack_require__(18) || null;
+	  var chromeShim = __webpack_require__(10) || null;
+	  var edgeShim = __webpack_require__(12) || null;
+	  var firefoxShim = __webpack_require__(15) || null;
+	  var safariShim = __webpack_require__(17) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10360,7 +10359,7 @@
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports) {
 
 	/*
@@ -10497,7 +10496,7 @@
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10510,8 +10509,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(10).log;
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var logging = __webpack_require__(9).log;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -10758,12 +10757,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(12)
+	  shimGetUserMedia: __webpack_require__(11)
 	};
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10775,7 +10774,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(10).log;
+	var logging = __webpack_require__(9).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -10958,7 +10957,7 @@
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10971,8 +10970,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(14);
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var SDPUtils = __webpack_require__(13);
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12030,12 +12029,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(15)
+	  shimGetUserMedia: __webpack_require__(14)
 	};
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12532,7 +12531,7 @@
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/*
@@ -12570,7 +12569,7 @@
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12583,7 +12582,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12726,12 +12725,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(17)
+	  shimGetUserMedia: __webpack_require__(16)
 	};
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12744,8 +12743,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(10).log;
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var logging = __webpack_require__(9).log;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -12887,7 +12886,7 @@
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports) {
 
 	/*

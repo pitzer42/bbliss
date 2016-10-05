@@ -26,7 +26,7 @@ class Root {
       this.onNetInfo(JSON.stringify(connection.localDescription))
     }
 
-    window.hack2 = description =>{
+    this.setRemoteDescription = description=>{
       connection.setRemoteDescription(new RTCSessionDescription(description))
     }
   }
@@ -43,17 +43,14 @@ class Peer{
       this.onStreamURL(streamURL)
     }
 
-    this.answer = remoteDescription=>{
+    this.answer = (remoteDescription, onLocalDescription)=>{
       connection.setRemoteDescription(remoteDescription)
-      connection.createAnswer(onLocalDescription, this.onError)
+      connection.createAnswer(description =>{
+        connection.setLocalDescription(description)
+        const descriptionJSON = JSON.stringify(description)
+        onLocalDescription(descriptionJSON)
+      }, this.onError)
     }
-
-    const onLocalDescription = description =>{
-      connection.setLocalDescription(description)
-      console.log(JSON.stringify(description))
-    }
-
-    window.hack = description =>{  }
   }
 }
 
