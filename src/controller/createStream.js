@@ -1,6 +1,5 @@
 const $ = require('jquery')
 const localizer = require('localizer')
-
 const submitButton = $(':button')
 const form = $('form[name="streamForm"]')
 const titleInput = $('input[name=title]')
@@ -10,21 +9,33 @@ const channelInput = $('input[name=channel]')
 const netInfoInput = $('input[name=netInfo]')
 const subtitle = $('h2')
 
-const servers = null
-const mediaConstraints = {
-  audio: false,
-  video: true
+function createStream(){
+  disableSubmitButton()
+  localizer(location=>{
+    const title = titleInput.val()
+    const socket = io()
+    socket.on('connect', ()=>{
+      const servers = null
+      const mediaConstraints = {
+        audio: false,
+        video: true
+      }
+      const FluxoPeer = require('peer').FluxoPeer
+      const source = new FluxoPeer(servers, socket)
+      source.displayStream = displayStream
+      source.onError = error =>{
+        console.log('FluxoPeer error: ' + error)
+      }
+      source.offer(mediaConstraints, title, location)
+      streamingUI()
+    })
+  })
 }
-const Root = require('peer').Root
-const root = new Root(servers, mediaConstraints)
 
-root.onStreamURL = streamURL =>{
+function displayStream(stream){
+  const streamURL = window.URL.createObjectURL(stream)
   const video = document.querySelector('video')
   video.src = streamURL
-}
-
-root.onError = error =>{
-  console.log('root error: ' + error)
 }
 
 function enableSubmitButton(){
@@ -35,48 +46,9 @@ function disableSubmitButton(){
   submitButton.prop('disabled', true)
 }
 
-function postForm(){
-  disableSubmitButton()
-  $.ajax({
-    url : form.attr('action'),
-    type: "POST",
-    data: form.serialize(),
-    success: streamingUI,
-    error: function (jXHR, textStatus, error) {
-      console.log('form error: ' + error);
-    }
-  })
-}
-
 function streamingUI(){
-  subtitle.text(titleInput.val())
+  subtitle.html('<a href="/app/'+ titleInput.val() + '">' + titleInput.val() + '</a>')
   form.remove()
 }
 
-const socket = io()
-
-socket.on('description', description=>{
-  root.setRemoteDescription(JSON.parse(description))
-})
-
-
-function fillHiddenInputs(){
-  platformInput.val(navigator.platform)
-  localizer(location=>{
-    locationInput.val(location)
-    root.onNetInfo = localDescription =>{
-      netInfoInput.val(localDescription)
-      enableSubmitButton()
-    }
-    root.offer()
-  })
-}
-
-disableSubmitButton()
-
-submitButton.click(postForm)
-
-socket.on('connect', ()=>{
-  channelInput.val(socket.id)
-  fillHiddenInputs()
-})
+submitButton.click(createStream)

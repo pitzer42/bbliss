@@ -1,15 +1,23 @@
 const $ = require('jquery')
-const Peer = require('peer').Peer
-const peer = new Peer(null)
-const remoteDescription = JSON.parse($('input[name=netInfo]').val())
+const localizer = require('localizer')
+const titleInput = $('input[name=title]')
+const FluxoPeer = require('peer').FluxoPeer
+const servers = null
+const socket = io()
 
-peer.onError = error=>{console.log(error)}
-peer.onStreamURL = streamURL =>{
-  const video = document.querySelector('video')
-  video.src = streamURL
-}
+socket.on('connect', ()=>{
+  const peer = new FluxoPeer(servers, socket)
 
-peer.answer(remoteDescription, description=>{
-  const socket = io()
-  socket.emit('description', description)
+  peer.onError = error=>{console.log(error)}
+
+  peer.displayStream = stream =>{
+    const streamURL = window.URL.createObjectURL(stream)
+    const video = document.querySelector('video')
+    video.src = streamURL
+  }
+
+  localizer(location=>{
+    const title = titleInput.val()
+    peer.receive(title, location)
+  })
 })

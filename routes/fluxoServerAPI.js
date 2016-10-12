@@ -17,10 +17,12 @@ exports.insertPeer = (location, platform, netInfo, onResult) =>{
   }, logError)
 }
 
-exports.insertStream = (title, root, onResult) =>{
+exports.insertStream = (title, location, root, onResult) =>{
+  onResult = onResult || Function.prototype
   const newStream = {
     title: title.replace(' ', '_'),
-    root: root._id
+    location: location,
+    root: root
   }
   storage((db)=>{
     const streams = db.collection('streams')
@@ -33,7 +35,7 @@ exports.insertStream = (title, root, onResult) =>{
 exports.findStream = (title, onResult) => {
   storage((db)=>{
     const streams = db.collection('streams')
-    const invokeOnResult = (result)=>{onResult(result[0])}
+    const invokeOnResult = result=>{onResult(result[0])}
     streams.find({title: title}).toArray().then(invokeOnResult).catch(logError)
     db.close()
   }, logError)

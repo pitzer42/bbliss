@@ -23,9 +23,7 @@ router.post('/new', (request, response, next)=>{
 router.get('/:title', (request, response, next)=>{
   const title = request.params.title
   fluxo.findStream(title,(stream)=>{
-    fluxo.findPeer(stream.root,(root)=>{
-      response.render('watchStream.pug', {netInfo: root.netInfo})
-    })
+    response.render('watchStream.pug', {title: title})
   })
 })
 

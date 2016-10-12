@@ -1,4 +1,5 @@
-const url = 'mongodb://dev:dev123@ds033046.mlab.com:33046/fluxo'
+const url = 'mongodb://localhost:27017/fluxo'
+//const url = 'mongodb://dev:dev123@ds033046.mlab.com:33046/fluxo'
 const dbClient = require('mongodb').MongoClient
 
 module.exports = function(onSuccess, onError){

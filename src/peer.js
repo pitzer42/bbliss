@@ -1,58 +1,132 @@
 require('webrtc-adapter')
 
-const nullf = ()=>{}
+function calculateMaxChildrenCount(){
+  const mobile = []
+  const oscpu = navigator.oscpu
+  const isMobile = mobile.some(item=>{return item === oscpu})
+  return isMobile ? 1 : 2
+}
 
-class Root {
-  constructor(servers, mediaConstraints){
-    const connection = new RTCPeerConnection(servers)
-    this.onStreamURL = nullf
-    this.onNetInfo = nullf
-    this.onError = nullf
+class SignalingChannel{
+  constructor(socket){
+    const SEND_DESCRIPTION = 'send_description'
+    const REQUEST_DESCRIPTION = 'request_description'
+    const AVAILABLE = 'available'
+    const UNAVAILABLE = 'unavailable'
 
-    this.offer = ()=>{
-      navigator.getUserMedia(mediaConstraints, onStream, this.onError)
+    this.description = null
+    this.onDescription = Function.prototype
+
+    this.requestDescription = title=>{
+      console.log('SignalingChannel.requestDescription');
+      socket.emit(REQUEST_DESCRIPTION, socket.id, title)
     }
 
-    const onStream = stream =>{
-      const streamURL = window.URL.createObjectURL(stream)
-      this.onStreamURL(streamURL)
+    socket.on(REQUEST_DESCRIPTION, (origin, target) =>{
+      console.log('on REQUEST_DESCRIPTION');
+      if(target === socket.id){
+        this.sendDescription(origin, this.description)
+      }
+    })
+
+    this.sendDescription = (target, description)=>{
+      console.log('SignalingChannel.sendDescription');
+      socket.emit(SEND_DESCRIPTION, socket.id, target, description)
+    }
+
+    socket.on(SEND_DESCRIPTION, (origin, target, description) =>{
+      console.log('on SEND_DESCRIPTION');
+      if(target === socket.id){
+        console.log(typeof(description));
+        this.onDescription(origin, description)
+      }
+    })
+
+    this.available = (title, location) =>{
+      console.log('SignalingChannel.available');
+      socket.emit(AVAILABLE, title, location, socket.id)
+    }
+
+    this.unavailable = ()=>{
+      console.log('SignalingChannel.unavailable');
+      socket.emit(UNAVAILABLE, socket.id)
+    }
+  }
+}
+
+class FluxoPeer {
+  constructor(servers, socket){
+    this.onError = Function.prototype
+    this.displayStream = Function.prototype
+    const signaling = new SignalingChannel(socket)
+    const MAX_CHILDREN = calculateMaxChildrenCount()
+    let connectedChildren = 0
+    let stream = null
+    let title = null
+    let location = null
+
+    this.offer = (constraints, _title, _location) => {
+      title = _title
+      location = _location
+      navigator.getUserMedia(constraints, onStreamCaptured, this.onError)
+    }
+
+    const onStreamCaptured = _stream=>{
+      stream = _stream
+      this.displayStream(stream)
+      createConnection(stream)
+    }
+
+    const createConnection = (stream)=>{
+      if(connectedChildren >= MAX_CHILDREN){
+        this.onError('cannot support more than ' + MAX_CHILDREN + ' connections')
+        return null
+      }
+      connectedChildren++
+      const connection = new RTCPeerConnection(servers)
       connection.addStream(stream)
-      const onLocalDescription = connection.setLocalDescription.bind(connection)
-      connection.createOffer(onLocalDescription, this.onError)
+      connection.onicecandidate = makeAvailable(connection)
+      const setLocalDescription = connection.setLocalDescription.bind(connection)
+      connection.createOffer(setLocalDescription, this.onError)
     }
 
-    connection.onicecandidate = event=>{
-      if(event.candidate === null)
-      this.onNetInfo(JSON.stringify(connection.localDescription))
+    const makeAvailable = connection =>{
+      return event=>{
+        if(event.candidate === null) {
+          signaling.description = connection.localDescription
+          signaling.onDescription = (origin, description)=>{connectChild(connection, origin, description)}
+          signaling.available(title, location)
+        }
+      }
     }
 
-    this.setRemoteDescription = description=>{
-      connection.setRemoteDescription(new RTCSessionDescription(description))
-    }
-  }
-}
-
-class Peer{
-  constructor(servers){
-    const connection = new RTCPeerConnection(servers)
-    this.onError = nullf
-    this.onStreamURL = nullf
-
-    connection.onaddstream = event =>{
-      const streamURL = window.URL.createObjectURL(event.stream)
-      this.onStreamURL(streamURL)
-    }
-
-    this.answer = (remoteDescription, onLocalDescription)=>{
+    const connectChild = (connection, origin, description)=>{
+      console.log(description)
+      const remoteDescription = new RTCSessionDescription(description)
       connection.setRemoteDescription(remoteDescription)
-      connection.createAnswer(description =>{
-        connection.setLocalDescription(description)
-        const descriptionJSON = JSON.stringify(description)
-        onLocalDescription(descriptionJSON)
-      }, this.onError)
+      createConnection(stream)
+    }
+
+    this.receive = (_title, _location)=>{
+      title = _title
+      location = _location
+      const connection = new RTCPeerConnection(servers)
+      connection.onaddstream = event =>{
+        stream = event.stream
+        this.displayStream(stream)
+      }
+      signaling.onDescription = (target, remoteDescription) =>{
+        remoteDescription = new RTCSessionDescription(remoteDescription)
+        connection.setRemoteDescription(remoteDescription)
+        connection.createAnswer(description =>{
+          connection.setLocalDescription(description)
+          signaling.sendDescription(target, description)
+        }, this.onError)
+      }
+      signaling.requestDescription(title)
     }
   }
 }
 
-exports.Root = Root
-exports.Peer = Peer
+exports.FluxoPeer = FluxoPeer
+exports.SignalingChannel = SignalingChannel
