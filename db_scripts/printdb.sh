@@ -1,1 +1,1 @@
-mongo fluxo --eval "db.getCollection("streams").find().pretty()"
+mongo fluxo --eval "db.getCollection('streams').find().pretty()"

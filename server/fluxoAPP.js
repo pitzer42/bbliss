@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const path = require('path')
-const fluxo = require('./fluxoServerAPI')
+const fluxo = require('./fluxoServer')
 
 router.get('/', (request, response, next)=>{
   fluxo.listStreams((results)=>{

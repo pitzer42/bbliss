@@ -11,6 +11,7 @@ socket.on('connect', ()=>{
   peer.onError = error=>{console.log(error)}
 
   peer.displayStream = stream =>{
+    console.log(stream)
     const streamURL = window.URL.createObjectURL(stream)
     const video = document.querySelector('video')
     video.src = streamURL
