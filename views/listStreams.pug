@@ -1,5 +1,8 @@
 h1 Fluxo
 ul
-  each stream in streams.length ? streams : [{title: 'There are no active streams'}]
-    li
-      a(href='/app/' + stream.title) #{stream.title}
+  if streams.length == 0
+    a There are no active streams
+  else
+    each stream in streams
+      li
+        a(href='/app/' + stream.title) #{stream.title}

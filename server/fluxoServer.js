@@ -20,7 +20,7 @@ exports.findStream = (title, onResult) => {
   storage(db=>{
     const streams = db.collection('streams')
     const invokeOnResult = result=>{onResult(result[0])}
-    streams.find({title: title}).toArray().then(invokeOnResult).catch(logError)
+    streams.findOne({title: title}).then(onResult).catch(logError)
     db.close()
   }, logError)
 }
@@ -33,7 +33,7 @@ exports.addPeer = (title, location, origin)=>{
   }, logError)
 }
 
-exports.popPeer = (title)=>{
+exports.popPeer = title=>{
   storage(db=>{
     const streams = db.collection('streams')
     streams.updateOne({title: title}, { $pop: { "peers" : -1 } })
@@ -41,40 +41,21 @@ exports.popPeer = (title)=>{
   }, logError)
 }
 
-exports.insertPeer = (location, platform, netInfo, onResult) =>{
-  const maxResources = assignResources(platform)
-  const newPeer = {
-    location: location,
-    resources: maxResources,
-    maxResources: maxResources,
-    netInfo: netInfo
-  }
-  storage((db)=>{
-    const peers = db.collection('peers')
-    const invokeOnResult =  onResult.bind(null, newPeer)
-    peers.insert(newPeer).then(invokeOnResult).catch(logError)
-    db.close()
-  }, logError)
-}
-
-exports.findPeer = (id, onResult) =>{
-  storage((db)=>{
-    const peers = db.collection('peers')
-    const invokeOnResult = (result)=>{onResult(result[0])}
-    peers.find({_id: id}).toArray().then(invokeOnResult).catch(logError)
-    db.close()
-  }, logError)
-}
-
-exports.listStreams = (onResult) => {
+exports.listStreams = onResult => {
   storage((db)=>{
     db.collection('streams').find().toArray().then(onResult).catch(logError)
     db.close()
   }, logError)
 }
 
-function assignResources(platform){
-  return 1
+exports.availablePeers = (title, onResult) =>{
+  storage(db=>{
+    const streams = db.collection('streams')
+    streams.findOne({title: title}).then(stream=>{
+      onResult(stream.peers)
+    }).catch(logError)
+    db.close()
+  })
 }
 
 function logError(error){

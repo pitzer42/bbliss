@@ -1,3 +1,0 @@
-use fluxo;
-db.getCollection("streams").drop()
-

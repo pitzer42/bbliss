@@ -46,8 +46,9 @@
 
 	'use strict';
 
-	var $ = __webpack_require__(1);
-	var localizer = __webpack_require__(2);
+	var localizer = __webpack_require__(1);
+	var display = __webpack_require__(3);
+	var $ = __webpack_require__(2);
 	var submitButton = $(':button');
 	var form = $('form[name="streamForm"]');
 	var titleInput = $('input[name=title]');
@@ -68,23 +69,16 @@
 	        audio: false,
 	        video: true
 	      };
-	      var FluxoPeer = __webpack_require__(3).FluxoPeer;
-	      var source = new FluxoPeer(servers, socket);
-	      source.displayStream = displayStream;
+	      var MediaPeer = __webpack_require__(4).MediaPeer;
+	      var source = new MediaPeer(servers, socket);
+	      source.displayStream = display;
 	      source.onError = function (error) {
-	        console.log('FluxoPeer error: ' + error);
+	        console.log('MediaPeer error: ' + error);
 	      };
-	      source.offer(mediaConstraints, title, location);
+	      source.play(title, location, mediaConstraints);
 	      streamingUI();
 	    });
 	  });
-	}
-
-	function displayStream(stream) {
-	  console.log(stream);
-	  var streamURL = window.URL.createObjectURL(stream);
-	  var video = document.querySelector('video');
-	  video.src = streamURL;
 	}
 
 	function enableSubmitButton() {
@@ -104,6 +98,41 @@
 
 /***/ },
 /* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	function geolocationAPI(onLocalized) {
+	  var $ = __webpack_require__(2);
+	  var api_url = 'http://ipinfo.io/json';
+	  var onResponse = function onResponse(response) {
+	    onLocalized(response.loc);
+	  };
+	  $.get(api_url, onResponse);
+	}
+
+	function parseLocation(position) {
+	  return position.coords.latitude + ',' + position.coords.longitude;
+	}
+
+	module.exports = function (onLocalized) {
+	  onLocalized('0,0');
+	  /*
+	  const fallback = ()=>{
+	    geolocationAPI(onLocalized);
+	  }
+	  const html5Geolocation = position=>{
+	    onLocalized(parseLocation(position))
+	  }
+	  if (navigator.geolocation)
+	    navigator.geolocation.getCurrentPosition(html5Geolocation, fallback)
+	  else
+	  fallback()
+	  //*/
+	};
+
+/***/ },
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*eslint-disable no-unused-vars*/
@@ -10183,59 +10212,39 @@
 
 
 /***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/* 3 */
+/***/ function(module, exports) {
 
 	'use strict';
 
-	function geolocationAPI(onLocalized) {
-	  var $ = __webpack_require__(1);
-	  var api_url = 'http://ipinfo.io/json';
-	  var onResponse = function onResponse(response) {
-	    onLocalized(response.loc);
-	  };
-	  $.get(api_url, onResponse);
+	function setStream(stream) {
+	  var streamURL = window.URL.createObjectURL(stream);
+	  var video = document.querySelector('video');
+	  video.src = streamURL;
 	}
 
-	function parseLocation(position) {
-	  return position.coords.latitude + ',' + position.coords.longitude;
-	}
-
-	module.exports = function (onLocalized) {
-	  onLocalized('0,0');
-	  /*
-	  const fallback = ()=>{
-	    geolocationAPI(onLocalized);
-	  }
-	  const html5Geolocation = position=>{
-	    onLocalized(parseLocation(position))
-	  }
-	  if (navigator.geolocation)
-	    navigator.geolocation.getCurrentPosition(html5Geolocation, fallback)
-	  else
-	  fallback()
-	  //*/
-	};
+	module.exports = setStream;
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _classCallCheck2 = __webpack_require__(4);
+	var _classCallCheck2 = __webpack_require__(5);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(5);
+	__webpack_require__(6);
 
-	var FluxoPeer = function FluxoPeer(servers, socket) {
+	var MediaPeer = function MediaPeer(servers, socket) {
 	  var _this = this;
 
-	  (0, _classCallCheck3.default)(this, FluxoPeer);
+	  (0, _classCallCheck3.default)(this, MediaPeer);
 
+	  console.log(socket.id);
 	  this.onError = Function.prototype;
 	  this.displayStream = Function.prototype;
 	  var signaling = new SignalingChannel(socket);
@@ -10244,66 +10253,64 @@
 	  var parent = null;
 	  var stream = null;
 	  var title = null;
-	  var location = null;
+	  var options = null;
 
-	  this.offer = function (constraints, _title, _location) {
-	    title = _title;
-	    location = _location;
-	    navigator.getUserMedia(constraints, onStream, _this.onError);
+	  this.play = function (streamTitle, peerOptions, mediaConstraints) {
+	    title = streamTitle;
+	    options = peerOptions;
+	    if (mediaConstraints) startStreaming(mediaConstraints);else watchStream();
 	  };
 
-	  var onStream = function onStream(_stream) {
-	    stream = _stream;
-	    _this.displayStream(stream);
-	    acceptNextChild();
+	  var startStreaming = function startStreaming(mediaConstraints) {
+	    navigator.getUserMedia(mediaConstraints, onStream, _this.onError);
 	  };
 
-	  var acceptNextChild = function acceptNextChild() {
-	    if (children.length >= MAX_CHILDREN) {
-	      _this.onError('cannot support more than ' + MAX_CHILDREN + ' children');
-	      return;
-	    }
-	    var connection = new RTCPeerConnection(servers);
-	    children.push(connection);
-	    connection.onicecandidate = makeAvailable(connection);
-	    connection.addStream(stream);
-	    var setLocalDescription = connection.setLocalDescription.bind(connection);
-	    connection.createOffer(setLocalDescription, _this.onError);
-	  };
-
-	  var makeAvailable = function makeAvailable(connection) {
-	    return function (event) {
-	      if (event.candidate === null) {
-	        signaling.description = connection.localDescription;
-	        signaling.onReceiveDescription = connectToChild;
-	        signaling.available(title, location);
-	      }
-	    };
-	  };
-
-	  var connectToChild = function connectToChild(origin, description) {
-	    var connection = children[children.length - 1];
-	    var remoteDescription = new RTCSessionDescription(description);
-	    connection.setRemoteDescription(remoteDescription);
-	    acceptNextChild();
-	  };
-
-	  this.receive = function (_title, _location) {
-	    title = _title;
-	    location = _location;
+	  var watchStream = function watchStream() {
 	    parent = new RTCPeerConnection(servers);
 	    parent.ontrack = function (event) {
 	      onStream(event.streams[0]);
 	    };
 	    signaling.onReceiveDescription = onReceiveDescription;
 	    signaling.requestDescription(title);
-	    parent.onconnectionstatechange = function (event) {
-	      console.log('*****' + parent.connectionState);
+	    parent.oniceconnectionstatechange = onParentConnectionChange;
+	  };
+
+	  var onStream = function onStream(streamObj) {
+	    stream = streamObj;
+	    _this.displayStream(stream);
+	    acceptNextChild();
+	  };
+
+	  var acceptNextChild = function acceptNextChild() {
+	    if (children.length >= MAX_CHILDREN) return;
+	    var child = new RTCPeerConnection(servers);
+	    children.push(child);
+	    child.onicecandidate = makeAvailable(child);
+	    child.addStream(stream);
+	    var setLocalDescription = child.setLocalDescription.bind(child);
+	    child.createOffer(setLocalDescription, _this.onError);
+	  };
+
+	  var makeAvailable = function makeAvailable(child) {
+	    return function (event) {
+	      if (event.candidate === null) {
+	        signaling.description = child.localDescription;
+	        signaling.onReceiveDescription = connectToChild;
+	        signaling.available(title, options);
+	      }
 	    };
-	    parent.oniceconnectionstatechange = triggerConnectionStateHandlers;
+	  };
+
+	  var connectToChild = function connectToChild(origin, description) {
+	    var child = children[children.length - 1];
+	    var remoteDescription = new RTCSessionDescription(description);
+	    child.setRemoteDescription(remoteDescription);
+	    child.oniceconnectionstatechange = onChildConnectionChange(connection);
+	    acceptNextChild();
 	  };
 
 	  var onReceiveDescription = function onReceiveDescription(target, remoteDescription) {
+	    parent.id = target; //DEBUG
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
 	    parent.setRemoteDescription(remoteDescription);
 	    var onAnswer = function onAnswer(description) {
@@ -10313,17 +10320,34 @@
 	    parent.createAnswer(onAnswer, _this.onError);
 	  };
 
-	  var triggerConnectionStateHandlers = function triggerConnectionStateHandlers() {
+	  var onParentConnectionChange = function onParentConnectionChange() {
 	    var state = parent.iceConnectionState;
+	    console.log('iceConnectionState: ' + state);
 	    if (state === 'connected') onParentConnected();else if (state === 'failed') onParentDisconnected();
 	  };
 
-	  var onParentConnected = function onParentConnected() {};
+	  var onParentConnected = function onParentConnected() {
+	    signaling.con(parent.id);
+	  };
 
 	  var onParentDisconnected = function onParentDisconnected() {
-	    _this.receive(title, location);
+	    console.log('rejoin');
+	    _this.play(title, options);
 	  };
-	  window.hack = onParentDisconnected;
+
+	  var onChildConnectionChange = function onChildConnectionChange(child) {
+	    return function () {
+	      var state = child.iceConnectionState;
+	      if (state === 'failed') onChildDisconnected(child);
+	    };
+	  };
+
+	  var onChildDisconnected = function onChildDisconnected(child) {
+	    child.close();
+	    var i = children.indexOf(child);
+	    children.splice(i, 1);
+	    acceptNextChild();
+	  };
 	};
 
 	function calculateMaxChildrenCount() {
@@ -10343,49 +10367,60 @@
 	  var SEND_DESCRIPTION = 'send_description';
 	  var REQUEST_DESCRIPTION = 'request_description';
 	  var AVAILABLE = 'available';
-	  var UNAVAILABLE = 'unavailable';
+	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
+
+	  var gotDescription = false;
 
 	  this.description = null;
 	  this.onReceiveDescription = Function.prototype;
 
 	  this.requestDescription = function (title) {
-	    console.log('SignalingChannel.requestDescription');
+	    gotDescription = false;
+	    console.log('-> REQUEST_DESCRIPTION');
 	    socket.emit(REQUEST_DESCRIPTION, socket.id, title);
+	    var retry = function retry() {
+	      if (!gotDescription) {
+	        _this2.requestDescription(title);
+	        console.log('retry REQUEST_DESCRIPTION');
+	      }
+	    };
+	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
 	  };
 
 	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
-	    console.log('on REQUEST_DESCRIPTION');
+	    console.log('<- REQUEST_DESCRIPTION');
 	    if (target === socket.id) {
 	      _this2.sendDescription(origin, _this2.description);
 	    }
 	  });
 
 	  this.sendDescription = function (target, description) {
-	    console.log('SignalingChannel.sendDescription');
+	    console.log('-> SEND_DESCRIPTION');
 	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
 	  };
 
 	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
-	    console.log('on SEND_DESCRIPTION');
+	    gotDescription = true;
+	    console.log('<- SEND_DESCRIPTION');
 	    if (target === socket.id) _this2.onReceiveDescription(origin, description);
 	  });
 
-	  this.available = function (title, location) {
-	    console.log('SignalingChannel.available');
-	    socket.emit(AVAILABLE, title, location, socket.id);
+	  this.available = function (title, options) {
+	    console.log('AVAILABLE');
+	    socket.emit(AVAILABLE, title, options, socket.id);
 	  };
 
-	  this.unavailable = function () {
-	    console.log('SignalingChannel.unavailable');
-	    socket.emit(UNAVAILABLE, socket.id);
+	  //Used o build a debug tree on the tracker
+	  this.con = function (parent) {
+	    socket.emit('con', parent, socket.id);
 	  };
 	};
 
-	exports.FluxoPeer = FluxoPeer;
+	exports.MediaPeer = MediaPeer;
 	exports.SignalingChannel = SignalingChannel;
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -10399,7 +10434,7 @@
 	};
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10416,12 +10451,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(6).log;
-	  var browserDetails = __webpack_require__(6).browserDetails;
+	  var logging = __webpack_require__(7).log;
+	  var browserDetails = __webpack_require__(7).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(6).extractVersion;
-	  module.exports.disableLog = __webpack_require__(6).disableLog;
+	  module.exports.extractVersion = __webpack_require__(7).extractVersion;
+	  module.exports.disableLog = __webpack_require__(7).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10430,10 +10465,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(7) || null;
-	  var edgeShim = __webpack_require__(9) || null;
-	  var firefoxShim = __webpack_require__(12) || null;
-	  var safariShim = __webpack_require__(14) || null;
+	  var chromeShim = __webpack_require__(8) || null;
+	  var edgeShim = __webpack_require__(10) || null;
+	  var firefoxShim = __webpack_require__(13) || null;
+	  var safariShim = __webpack_require__(15) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10497,7 +10532,7 @@
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	/*
@@ -10634,7 +10669,7 @@
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10647,8 +10682,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(6).log;
-	var browserDetails = __webpack_require__(6).browserDetails;
+	var logging = __webpack_require__(7).log;
+	var browserDetails = __webpack_require__(7).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -10895,12 +10930,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(8)
+	  shimGetUserMedia: __webpack_require__(9)
 	};
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10912,7 +10947,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(6).log;
+	var logging = __webpack_require__(7).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -11095,7 +11130,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11108,8 +11143,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(10);
-	var browserDetails = __webpack_require__(6).browserDetails;
+	var SDPUtils = __webpack_require__(11);
+	var browserDetails = __webpack_require__(7).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12167,12 +12202,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(11)
+	  shimGetUserMedia: __webpack_require__(12)
 	};
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12669,7 +12704,7 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	/*
@@ -12707,7 +12742,7 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12720,7 +12755,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(6).browserDetails;
+	var browserDetails = __webpack_require__(7).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12863,12 +12898,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(13)
+	  shimGetUserMedia: __webpack_require__(14)
 	};
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12881,8 +12916,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(6).log;
-	var browserDetails = __webpack_require__(6).browserDetails;
+	var logging = __webpack_require__(7).log;
+	var browserDetails = __webpack_require__(7).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -13024,7 +13059,7 @@
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	/*

@@ -2,8 +2,9 @@
 
 require('webrtc-adapter')
 
-class FluxoPeer {
+class MediaPeer {
   constructor(servers, socket){
+    console.log(socket.id)
     this.onError = Function.prototype
     this.displayStream = Function.prototype
     const signaling = new SignalingChannel(socket)
@@ -12,62 +13,67 @@ class FluxoPeer {
     let parent = null
     let stream = null
     let title = null
-    let location = null
+    let options = null
 
-    this.offer = (constraints, _title, _location) => {
-      title = _title
-      location = _location
-      navigator.getUserMedia(constraints, onStream, this.onError)
+    this.play = (streamTitle, peerOptions, mediaConstraints) =>{
+      title = streamTitle
+      options = peerOptions
+      if(mediaConstraints)
+      startStreaming(mediaConstraints)
+      else
+      watchStream()
     }
 
-    const onStream = _stream=>{
-      stream = _stream
+    const startStreaming = (mediaConstraints) => {
+      navigator.getUserMedia(mediaConstraints, onStream, this.onError)
+    }
+
+    const watchStream = ()=>{
+      parent = new RTCPeerConnection(servers)
+      parent.ontrack = event =>{ onStream(event.streams[0]) }
+      signaling.onReceiveDescription = onReceiveDescription
+      signaling.requestDescription(title)
+      parent.oniceconnectionstatechange = onParentConnectionChange
+    }
+
+    const onStream = streamObj=>{
+      stream = streamObj
       this.displayStream(stream)
       acceptNextChild()
     }
 
     const acceptNextChild = ()=>{
-      if(children.length >= MAX_CHILDREN){
-        this.onError('cannot support more than ' + MAX_CHILDREN + ' children')
-        return
-      }
-      const connection = new RTCPeerConnection(servers)
-      children.push(connection)
-      connection.onicecandidate = makeAvailable(connection)
-      connection.addStream(stream)
-      const setLocalDescription = connection.setLocalDescription.bind(connection)
-      connection.createOffer(setLocalDescription, this.onError)
+      if(children.length >= MAX_CHILDREN)
+      return
+      const child = new RTCPeerConnection(servers)
+      children.push(child)
+      child.onicecandidate = makeAvailable(child)
+      child.addStream(stream)
+      const setLocalDescription = child.setLocalDescription.bind(child)
+      child.createOffer(setLocalDescription, this.onError)
     }
 
-    const makeAvailable = connection =>{
+    const makeAvailable = child =>{
       return event=>{
         if(event.candidate === null) {
-          signaling.description = connection.localDescription
+          signaling.description = child.localDescription
           signaling.onReceiveDescription = connectToChild
-          signaling.available(title, location)
+          signaling.available(title, options)
         }
       }
     }
 
     const connectToChild = (origin, description)=>{
-      const connection = children[children.length - 1]
+      const child = children[children.length - 1]
       const remoteDescription = new RTCSessionDescription(description)
-      connection.setRemoteDescription(remoteDescription)
+      child.setRemoteDescription(remoteDescription)
+      child.oniceconnectionstatechange = onChildConnectionChange(connection)
       acceptNextChild()
     }
 
-    this.receive = (_title, _location)=>{
-      title = _title
-      location = _location
-      parent = new RTCPeerConnection(servers)
-      parent.ontrack = event =>{ onStream(event.streams[0]) }
-      signaling.onReceiveDescription = onReceiveDescription
-      signaling.requestDescription(title)
-      parent.onconnectionstatechange = event=>{console.log('*****' + parent.connectionState)}
-      parent.oniceconnectionstatechange = triggerConnectionStateHandlers
-    }
 
     const onReceiveDescription = (target, remoteDescription) =>{
+      parent.id = target//DEBUG
       remoteDescription = new RTCSessionDescription(remoteDescription)
       parent.setRemoteDescription(remoteDescription)
       const onAnswer = description =>{
@@ -77,20 +83,38 @@ class FluxoPeer {
       parent.createAnswer(onAnswer, this.onError)
     }
 
-    const triggerConnectionStateHandlers = ()=>{
+    const onParentConnectionChange = ()=>{
       const state = parent.iceConnectionState
+      console.log('iceConnectionState: ' + state)
       if(state==='connected')
-      onParentConnected()
+        onParentConnected()
       else if(state === 'failed')
-      onParentDisconnected()
+        onParentDisconnected()
     }
 
-    const onParentConnected = ()=>{}
+    const onParentConnected = ()=>{
+      signaling.con(parent.id)
+    }
 
     const onParentDisconnected = ()=>{
-      this.receive(title, location)
+      console.log('rejoin')
+      this.play(title, options)
     }
-    window.hack = onParentDisconnected
+
+    const onChildConnectionChange = child=>{
+      return ()=>{
+        const state = child.iceConnectionState
+        if(state === 'failed')
+          onChildDisconnected(child)
+      }
+    }
+
+    const onChildDisconnected = child =>{
+      child.close()
+      const i = children.indexOf(child)
+      children.splice(i, 1)
+      acceptNextChild()
+    }
   }
 }
 
@@ -106,45 +130,56 @@ class SignalingChannel{
     const SEND_DESCRIPTION = 'send_description'
     const REQUEST_DESCRIPTION = 'request_description'
     const AVAILABLE = 'available'
-    const UNAVAILABLE = 'unavailable'
+    const REQUEST_DESCRIPTION_TIMEOUT = 5000
+
+    let gotDescription = false
 
     this.description = null
     this.onReceiveDescription = Function.prototype
 
     this.requestDescription = title=>{
-      console.log('SignalingChannel.requestDescription');
+      gotDescription = false
+      console.log('-> REQUEST_DESCRIPTION');
       socket.emit(REQUEST_DESCRIPTION, socket.id, title)
+      const retry = ()=>{
+        if(!gotDescription){
+          this.requestDescription(title)
+          console.log('retry REQUEST_DESCRIPTION')
+        }
+      }
+      setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT)
     }
 
     socket.on(REQUEST_DESCRIPTION, (origin, target) =>{
-      console.log('on REQUEST_DESCRIPTION');
+      console.log('<- REQUEST_DESCRIPTION');
       if(target === socket.id){
         this.sendDescription(origin, this.description)
       }
     })
 
     this.sendDescription = (target, description)=>{
-      console.log('SignalingChannel.sendDescription');
+      console.log('-> SEND_DESCRIPTION');
       socket.emit(SEND_DESCRIPTION, socket.id, target, description)
     }
 
     socket.on(SEND_DESCRIPTION, (origin, target, description) =>{
-      console.log('on SEND_DESCRIPTION');
+      gotDescription = true
+      console.log('<- SEND_DESCRIPTION');
       if(target === socket.id)
       this.onReceiveDescription(origin, description)
     })
 
-    this.available = (title, location) =>{
-      console.log('SignalingChannel.available');
-      socket.emit(AVAILABLE, title, location, socket.id)
+    this.available = (title, options) =>{
+      console.log('AVAILABLE');
+      socket.emit(AVAILABLE, title, options, socket.id)
     }
 
-    this.unavailable = ()=>{
-      console.log('SignalingChannel.unavailable');
-      socket.emit(UNAVAILABLE, socket.id)
+    //Used o build a debug tree on the tracker
+    this.con = (parent)=>{
+      socket.emit('con', parent, socket.id)
     }
   }
 }
 
-exports.FluxoPeer = FluxoPeer
+exports.MediaPeer = MediaPeer
 exports.SignalingChannel = SignalingChannel

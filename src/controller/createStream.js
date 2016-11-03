@@ -1,5 +1,6 @@
-const $ = require('jquery')
 const localizer = require('localizer')
+const display = require('display')
+const $ = require('jquery')
 const submitButton = $(':button')
 const form = $('form[name="streamForm"]')
 const titleInput = $('input[name=title]')
@@ -20,23 +21,16 @@ function createStream(){
         audio: false,
         video: true
       }
-      const FluxoPeer = require('peer').FluxoPeer
-      const source = new FluxoPeer(servers, socket)
-      source.displayStream = displayStream
+      const MediaPeer = require('peer').MediaPeer
+      const source = new MediaPeer(servers, socket)
+      source.displayStream = display
       source.onError = error =>{
-        console.log('FluxoPeer error: ' + error)
+        console.log('MediaPeer error: ' + error)
       }
-      source.offer(mediaConstraints, title, location)
+      source.play(title, location, mediaConstraints, )
       streamingUI()
     })
   })
-}
-
-function displayStream(stream){
-  console.log(stream)
-  const streamURL = window.URL.createObjectURL(stream)
-  const video = document.querySelector('video')
-  video.src = streamURL
 }
 
 function enableSubmitButton(){

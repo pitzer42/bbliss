@@ -25,27 +25,27 @@ describe('Fluxo Server', ()=>{
     const title = 'test'
     const location = {lat:0, lng:0}
     const peerId = 'testpeer'
-    const expectStreamToHaveMoreThanOnePeer = stream=>{
-      expect(stream.peers.length).toBeGreaterThan(1)
+    const expectStreamToHaveMoreThanOnePeer = peers=>{
+      expect(peers.length).toBeGreaterThan(1)
       done()
     }
     fluxo.addPeer(title, location, peerId)
-    fluxo.findStream(title, expectStreamToHaveMoreThanOnePeer)
+    fluxo.availablePeers(title, expectStreamToHaveMoreThanOnePeer)
   })
   it('pops peers from a stream', done=>{
     const title = 'test'
     let before = 0
     let after = 0
-    const getPeerCountBefore = stream =>{
-      before = stream.peers.length
+    const getPeerCountBefore = peers =>{
+      before = peers.length
     }
-    const getPeerCountAfter = stream=>{
-      after = stream.peers.length
+    const getPeerCountAfter = peers=>{
+      after = peers.length
       expect(before).toBeGreaterThan(after)
       done()
     }
-    fluxo.findStream(title, getPeerCountBefore)
+    fluxo.availablePeers(title, getPeerCountBefore)
     fluxo.popPeer(title)
-    fluxo.findStream(title, getPeerCountAfter)
+    fluxo.availablePeers(title, getPeerCountAfter)
   })
 })

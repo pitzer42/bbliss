@@ -1,24 +1,17 @@
+const display = require('display')
 const $ = require('jquery')
 const localizer = require('localizer')
 const titleInput = $('input[name=title]')
-const FluxoPeer = require('peer').FluxoPeer
+const MediaPeer = require('peer').MediaPeer
 const servers = null
 const socket = io()
 
 socket.on('connect', ()=>{
-  const peer = new FluxoPeer(servers, socket)
-
+  const peer = new MediaPeer(servers, socket)
   peer.onError = error=>{console.log(error)}
-
-  peer.displayStream = stream =>{
-    console.log(stream)
-    const streamURL = window.URL.createObjectURL(stream)
-    const video = document.querySelector('video')
-    video.src = streamURL
-  }
-
+  peer.displayStream = display
   localizer(location=>{
     const title = titleInput.val()
-    peer.receive(title, location)
+    peer.play(title, location)
   })
 })
