@@ -50,10 +50,8 @@ function onRequestDescription(origin, title){
       fluxo.popPeer(title)
       if(leafId === origin)
       return onRequestDescription(origin, title)
-      else{
-        leaf.emit('request_description', origin, stream.peers[0])
-        //addToTree(stream.peers[0], origin)
-      }
+      else
+      leaf.emit('request_description', origin, stream.peers[0])
     }
     else
     console.log('leaf not found for ' + stream.root +' ' +socket.id)

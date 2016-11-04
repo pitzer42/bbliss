@@ -10209,6 +10209,8 @@
 
 	__webpack_require__(6);
 
+	var ConnectionState = { connected: 'connected', failed: 'failed' };
+
 	var MediaPeer = function MediaPeer(servers, socket) {
 	  var _this = this;
 
@@ -10237,8 +10239,8 @@
 
 	  var watchStream = function watchStream() {
 	    parent = new RTCPeerConnection(servers);
-	    parent.ontrack = function (event) {
-	      onStream(event.streams[0]);
+	    parent.onaddstream = function (event) {
+	      onStream(event.stream);
 	    };
 	    signaling.onReceiveDescription = onReceiveDescription;
 	    signaling.requestDescription(title);
@@ -10246,9 +10248,18 @@
 	  };
 
 	  var onStream = function onStream(streamObj) {
+	    console.log('MediaPeer.onStream()');
+	    updateChildrenStream(streamObj);
 	    stream = streamObj;
 	    _this.displayStream(stream);
 	    acceptNextChild();
+	  };
+
+	  var updateChildrenStream = function updateChildrenStream(newStream) {
+	    for (var i = 0; i < children.length; i++) {
+	      children[i].removeStream(stream);
+	      children[i].addStream(newStream);
+	    }
 	  };
 
 	  var acceptNextChild = function acceptNextChild() {
@@ -10275,7 +10286,7 @@
 	    var child = children[children.length - 1];
 	    var remoteDescription = new RTCSessionDescription(description);
 	    child.setRemoteDescription(remoteDescription);
-	    child.oniceconnectionstatechange = onChildConnectionChange(connection);
+	    child.oniceconnectionstatechange = onChildConnectionChange(child);
 	    acceptNextChild();
 	  };
 
@@ -10292,23 +10303,21 @@
 
 	  var onParentConnectionChange = function onParentConnectionChange() {
 	    var state = parent.iceConnectionState;
-	    console.log('iceConnectionState: ' + state);
-	    if (state === 'connected') onParentConnected();else if (state === 'failed') onParentDisconnected();
+	    if (state === ConnectionState.connected) onParentConnected();else if (state === ConnectionState.failed) onParentDisconnected();
 	  };
 
 	  var onParentConnected = function onParentConnected() {
-	    signaling.con(parent.id);
+	    signaling.con(parent.id); //DEBUG
 	  };
 
 	  var onParentDisconnected = function onParentDisconnected() {
-	    console.log('rejoin');
 	    _this.play(title, options);
 	  };
 
 	  var onChildConnectionChange = function onChildConnectionChange(child) {
 	    return function () {
 	      var state = child.iceConnectionState;
-	      if (state === 'failed') onChildDisconnected(child);
+	      if (state === ConnectionState.failed) onChildDisconnected(child);
 	    };
 	  };
 

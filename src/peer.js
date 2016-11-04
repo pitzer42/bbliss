@@ -2,6 +2,8 @@
 
 require('webrtc-adapter')
 
+const ConnectionState = {connected: 'connected', failed: 'failed'}
+
 class MediaPeer {
   constructor(servers, socket){
     console.log(socket.id)
@@ -30,16 +32,25 @@ class MediaPeer {
 
     const watchStream = ()=>{
       parent = new RTCPeerConnection(servers)
-      parent.ontrack = event =>{ onStream(event.streams[0]) }
+      parent.onaddstream = event =>{ onStream(event.stream) }
       signaling.onReceiveDescription = onReceiveDescription
       signaling.requestDescription(title)
       parent.oniceconnectionstatechange = onParentConnectionChange
     }
 
     const onStream = streamObj=>{
+      console.log('MediaPeer.onStream()')
+      updateChildrenStream(streamObj)
       stream = streamObj
       this.displayStream(stream)
       acceptNextChild()
+    }
+
+    const updateChildrenStream = newStream=>{
+      for(let i = 0; i<children.length; i++){
+        children[i].removeStream(stream)
+        children[i].addStream(newStream)
+      }
     }
 
     const acceptNextChild = ()=>{
@@ -67,10 +78,9 @@ class MediaPeer {
       const child = children[children.length - 1]
       const remoteDescription = new RTCSessionDescription(description)
       child.setRemoteDescription(remoteDescription)
-      child.oniceconnectionstatechange = onChildConnectionChange(connection)
+      child.oniceconnectionstatechange = onChildConnectionChange(child)
       acceptNextChild()
     }
-
 
     const onReceiveDescription = (target, remoteDescription) =>{
       parent.id = target//DEBUG
@@ -85,27 +95,25 @@ class MediaPeer {
 
     const onParentConnectionChange = ()=>{
       const state = parent.iceConnectionState
-      console.log('iceConnectionState: ' + state)
-      if(state==='connected')
-        onParentConnected()
-      else if(state === 'failed')
-        onParentDisconnected()
+      if(state === ConnectionState.connected)
+      onParentConnected()
+      else if(state === ConnectionState.failed)
+      onParentDisconnected()
     }
 
     const onParentConnected = ()=>{
-      signaling.con(parent.id)
+      signaling.con(parent.id)//DEBUG
     }
 
     const onParentDisconnected = ()=>{
-      console.log('rejoin')
       this.play(title, options)
     }
 
     const onChildConnectionChange = child=>{
       return ()=>{
         const state = child.iceConnectionState
-        if(state === 'failed')
-          onChildDisconnected(child)
+        if(state === ConnectionState.failed)
+        onChildDisconnected(child)
       }
     }
 
