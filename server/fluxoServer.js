@@ -2,6 +2,7 @@
 const storage = require('./storage')
 
 exports.insertStream = (title, location, root, onResult) =>{
+  console.log('inserting ' + title + ', ' + location + ', ' + root)
   onResult = onResult || Function.prototype
   const newStream = {
     title: title.replace(' ', '_'),
@@ -59,5 +60,5 @@ exports.availablePeers = (title, onResult) =>{
 }
 
 function logError(error){
-  console.log(error)
+  console.log('DBERRO: ' + error)
 }

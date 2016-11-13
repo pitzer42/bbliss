@@ -21,7 +21,7 @@ function createStream(){
         audio: false,
         video: true
       }
-      const MediaPeer = require('peer').MediaPeer
+      const MediaPeer = require('../streaming/MediaPeer')
       const source = new MediaPeer(servers, socket)
       source.displayStream = display
       source.onError = error =>{

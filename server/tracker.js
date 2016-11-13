@@ -19,10 +19,8 @@ function addToTree(parent, child){
 
 function removeFromTree(node){
   node = node.slice(2,7)
-  console.log('removing ' + node)
   delete tree[node]
   for(let parent in tree){
-    console.log(parent)
     let children = tree[parent]
     let i = children.indexOf(node)
     if(i != -1){

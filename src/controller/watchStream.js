@@ -2,7 +2,7 @@ const display = require('display')
 const $ = require('jquery')
 const localizer = require('localizer')
 const titleInput = $('input[name=title]')
-const MediaPeer = require('peer').MediaPeer
+const MediaPeer = require('../streaming/MediaPeer')
 const servers = null
 const socket = io()
 

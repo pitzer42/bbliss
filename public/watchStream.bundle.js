@@ -50,7 +50,7 @@
 	var $ = __webpack_require__(2);
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
-	var MediaPeer = __webpack_require__(4).MediaPeer;
+	var MediaPeer = __webpack_require__(23);
 	var servers = null;
 	var socket = io();
 
@@ -10196,209 +10196,7 @@
 	module.exports = setStream;
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _classCallCheck2 = __webpack_require__(5);
-
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	__webpack_require__(6);
-
-	var ConnectionState = { connected: 'connected', failed: 'failed' };
-
-	var MediaPeer = function MediaPeer(servers, socket) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, MediaPeer);
-
-	  console.log(socket.id);
-	  this.onError = Function.prototype;
-	  this.displayStream = Function.prototype;
-	  var signaling = new SignalingChannel(socket);
-	  var MAX_CHILDREN = calculateMaxChildrenCount();
-	  var children = [];
-	  var parent = null;
-	  var stream = null;
-	  var title = null;
-	  var options = null;
-
-	  this.play = function (streamTitle, peerOptions, mediaConstraints) {
-	    title = streamTitle;
-	    options = peerOptions;
-	    if (mediaConstraints) startStreaming(mediaConstraints);else watchStream();
-	  };
-
-	  var startStreaming = function startStreaming(mediaConstraints) {
-	    navigator.getUserMedia(mediaConstraints, onStream, _this.onError);
-	  };
-
-	  var watchStream = function watchStream() {
-	    parent = new RTCPeerConnection(servers);
-	    parent.onaddstream = function (event) {
-	      onStream(event.stream);
-	    };
-	    signaling.onReceiveDescription = onReceiveDescription;
-	    signaling.requestDescription(title);
-	    parent.oniceconnectionstatechange = onParentConnectionChange;
-	  };
-
-	  var onStream = function onStream(streamObj) {
-	    console.log('MediaPeer.onStream()');
-	    updateChildrenStream(streamObj);
-	    stream = streamObj;
-	    _this.displayStream(stream);
-	    acceptNextChild();
-	  };
-
-	  var updateChildrenStream = function updateChildrenStream(newStream) {
-	    for (var i = 0; i < children.length; i++) {
-	      children[i].removeStream(stream);
-	      children[i].addStream(newStream);
-	    }
-	  };
-
-	  var acceptNextChild = function acceptNextChild() {
-	    if (children.length >= MAX_CHILDREN) return;
-	    var child = new RTCPeerConnection(servers);
-	    children.push(child);
-	    child.onicecandidate = makeAvailable(child);
-	    child.addStream(stream);
-	    var setLocalDescription = child.setLocalDescription.bind(child);
-	    child.createOffer(setLocalDescription, _this.onError);
-	  };
-
-	  var makeAvailable = function makeAvailable(child) {
-	    return function (event) {
-	      if (event.candidate === null) {
-	        signaling.description = child.localDescription;
-	        signaling.onReceiveDescription = connectToChild;
-	        signaling.available(title, options);
-	      }
-	    };
-	  };
-
-	  var connectToChild = function connectToChild(origin, description) {
-	    var child = children[children.length - 1];
-	    var remoteDescription = new RTCSessionDescription(description);
-	    child.setRemoteDescription(remoteDescription);
-	    child.oniceconnectionstatechange = onChildConnectionChange(child);
-	    acceptNextChild();
-	  };
-
-	  var onReceiveDescription = function onReceiveDescription(target, remoteDescription) {
-	    parent.id = target; //DEBUG
-	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    parent.setRemoteDescription(remoteDescription);
-	    var onAnswer = function onAnswer(description) {
-	      parent.setLocalDescription(description);
-	      signaling.sendDescription(target, description);
-	    };
-	    parent.createAnswer(onAnswer, _this.onError);
-	  };
-
-	  var onParentConnectionChange = function onParentConnectionChange() {
-	    var state = parent.iceConnectionState;
-	    if (state === ConnectionState.connected) onParentConnected();else if (state === ConnectionState.failed) onParentDisconnected();
-	  };
-
-	  var onParentConnected = function onParentConnected() {
-	    signaling.con(parent.id); //DEBUG
-	  };
-
-	  var onParentDisconnected = function onParentDisconnected() {
-	    _this.play(title, options);
-	  };
-
-	  var onChildConnectionChange = function onChildConnectionChange(child) {
-	    return function () {
-	      var state = child.iceConnectionState;
-	      if (state === ConnectionState.failed) onChildDisconnected(child);
-	    };
-	  };
-
-	  var onChildDisconnected = function onChildDisconnected(child) {
-	    child.close();
-	    var i = children.indexOf(child);
-	    children.splice(i, 1);
-	    acceptNextChild();
-	  };
-	};
-
-	function calculateMaxChildrenCount() {
-	  var mobile = [];
-	  var oscpu = navigator.oscpu;
-	  var isMobile = mobile.some(function (item) {
-	    return item === oscpu;
-	  });
-	  return isMobile ? 1 : 2;
-	}
-
-	var SignalingChannel = function SignalingChannel(socket) {
-	  var _this2 = this;
-
-	  (0, _classCallCheck3.default)(this, SignalingChannel);
-
-	  var SEND_DESCRIPTION = 'send_description';
-	  var REQUEST_DESCRIPTION = 'request_description';
-	  var AVAILABLE = 'available';
-	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
-
-	  var gotDescription = false;
-
-	  this.description = null;
-	  this.onReceiveDescription = Function.prototype;
-
-	  this.requestDescription = function (title) {
-	    gotDescription = false;
-	    console.log('-> REQUEST_DESCRIPTION');
-	    socket.emit(REQUEST_DESCRIPTION, socket.id, title);
-	    var retry = function retry() {
-	      if (!gotDescription) {
-	        _this2.requestDescription(title);
-	        console.log('retry REQUEST_DESCRIPTION');
-	      }
-	    };
-	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
-	  };
-
-	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
-	    console.log('<- REQUEST_DESCRIPTION');
-	    if (target === socket.id) {
-	      _this2.sendDescription(origin, _this2.description);
-	    }
-	  });
-
-	  this.sendDescription = function (target, description) {
-	    console.log('-> SEND_DESCRIPTION');
-	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
-	  };
-
-	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
-	    gotDescription = true;
-	    console.log('<- SEND_DESCRIPTION');
-	    if (target === socket.id) _this2.onReceiveDescription(origin, description);
-	  });
-
-	  this.available = function (title, options) {
-	    console.log('AVAILABLE');
-	    socket.emit(AVAILABLE, title, options, socket.id);
-	  };
-
-	  //Used o build a debug tree on the tracker
-	  this.con = function (parent) {
-	    socket.emit('con', parent, socket.id);
-	  };
-	};
-
-	exports.MediaPeer = MediaPeer;
-	exports.SignalingChannel = SignalingChannel;
-
-/***/ },
+/* 4 */,
 /* 5 */
 /***/ function(module, exports) {
 
@@ -10413,7 +10211,84 @@
 	};
 
 /***/ },
-/* 6 */
+/* 6 */,
+/* 7 */,
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _stringify = __webpack_require__(9);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
+
+	function onaddstream(connection, f) {
+	  try {
+	    if (connection.onaddtrack) connection.ontrack = connection.onaddtrack;
+	    connection.ontrack = function (event) {
+	      f(event.streams[0]);
+	    };
+	  } catch (e) {
+	    connection.onaddstream = function (event) {
+	      f(event.stream);
+	    };
+	  }
+	}
+
+	function addStream(connection, stream) {
+	  try {
+	    var track = stream.getVideoTracks()[0];
+	    connection.sender = connection.addTrack(track, stream);
+	    console.log('+++++++++ sender ' + (0, _stringify2.default)(connection.sender));
+	  } catch (e) {
+	    connection.addStream(stream);
+	  }
+	}
+
+	function removeStream(connection, stream) {
+	  try {
+	    console.log('+++++++++ sender ' + (0, _stringify2.default)(connection.sender));
+	    connection.removeTrack(connection.sender);
+	  } catch (e) {
+	    connection.removeStream(stream);
+	  }
+	}
+
+	exports.onaddstream = onaddstream;
+	exports.addStream = addStream;
+	exports.removeStream = removeStream;
+	exports.ConnectionState = ConnectionState;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(10), __esModule: true };
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(11)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+
+/***/ },
+/* 12 */,
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10430,12 +10305,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(7).log;
-	  var browserDetails = __webpack_require__(7).browserDetails;
+	  var logging = __webpack_require__(14).log;
+	  var browserDetails = __webpack_require__(14).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(7).extractVersion;
-	  module.exports.disableLog = __webpack_require__(7).disableLog;
+	  module.exports.extractVersion = __webpack_require__(14).extractVersion;
+	  module.exports.disableLog = __webpack_require__(14).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10444,10 +10319,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(8) || null;
-	  var edgeShim = __webpack_require__(10) || null;
-	  var firefoxShim = __webpack_require__(13) || null;
-	  var safariShim = __webpack_require__(15) || null;
+	  var chromeShim = __webpack_require__(15) || null;
+	  var edgeShim = __webpack_require__(17) || null;
+	  var firefoxShim = __webpack_require__(20) || null;
+	  var safariShim = __webpack_require__(22) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10511,7 +10386,7 @@
 
 
 /***/ },
-/* 7 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/*
@@ -10648,7 +10523,7 @@
 
 
 /***/ },
-/* 8 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10661,8 +10536,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(7).log;
-	var browserDetails = __webpack_require__(7).browserDetails;
+	var logging = __webpack_require__(14).log;
+	var browserDetails = __webpack_require__(14).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -10909,12 +10784,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(9)
+	  shimGetUserMedia: __webpack_require__(16)
 	};
 
 
 /***/ },
-/* 9 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10926,7 +10801,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(7).log;
+	var logging = __webpack_require__(14).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -11109,7 +10984,7 @@
 
 
 /***/ },
-/* 10 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11122,8 +10997,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(11);
-	var browserDetails = __webpack_require__(7).browserDetails;
+	var SDPUtils = __webpack_require__(18);
+	var browserDetails = __webpack_require__(14).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12181,12 +12056,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(12)
+	  shimGetUserMedia: __webpack_require__(19)
 	};
 
 
 /***/ },
-/* 11 */
+/* 18 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12683,7 +12558,7 @@
 
 
 /***/ },
-/* 12 */
+/* 19 */
 /***/ function(module, exports) {
 
 	/*
@@ -12721,7 +12596,7 @@
 
 
 /***/ },
-/* 13 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12734,7 +12609,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(7).browserDetails;
+	var browserDetails = __webpack_require__(14).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12877,12 +12752,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(14)
+	  shimGetUserMedia: __webpack_require__(21)
 	};
 
 
 /***/ },
-/* 14 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12895,8 +12770,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(7).log;
-	var browserDetails = __webpack_require__(7).browserDetails;
+	var logging = __webpack_require__(14).log;
+	var browserDetails = __webpack_require__(14).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -13038,7 +12913,7 @@
 
 
 /***/ },
-/* 15 */
+/* 22 */
 /***/ function(module, exports) {
 
 	/*
@@ -13070,6 +12945,390 @@
 	  // shimPeerConnection: safariShim.shimPeerConnection
 	};
 
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SignalingChannel = __webpack_require__(24);
+	var ParentConnection = __webpack_require__(25);
+	var ChildConnection = __webpack_require__(26);
+
+	/**
+	* Returns a maximun children value based on empirical observation considering
+	* this device`s resources
+	*/
+	function calculateMaxChildrenCount() {
+	  var mobile = [];
+	  var oscpu = navigator.oscpu;
+	  var isMobile = mobile.some(function (item) {
+	    return item === oscpu;
+	  });
+	  return isMobile ? 1 : 2;
+	}
+
+	/**
+	* Coordinates states and comunication channels to download a stream and upload it
+	* to its children.
+	*/
+
+	var MediaPeer =
+
+	/**
+	* @param {string} servers - address of an ICE/TURN/STUN server
+	* @param {io.socket} trackerSocket - socket connection with a tracker
+	*/
+	function MediaPeer(servers, trackerSocket) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, MediaPeer);
+
+	  console.log(trackerSocket.id); //DEBUG
+	  //public
+	  this.displayStream = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var MAX_CHILDREN = calculateMaxChildrenCount();
+	  var signaling = new SignalingChannel(trackerSocket);
+	  var stream = null;
+	  var parent = null;
+	  var children = [];
+
+	  /**
+	  * Starts a new stream if {streamTitle} is not in the active streams
+	  * list in the tracker, or joins an existing stream.
+	  * @param {string} streamTitle - Title of a new or an existing stream
+	  * @param {dictionary} peerOptions - Options for helping the tracker to
+	  *     optimize peer selection. ex: {location:"123,523"}
+	  * @param {dictionary} mediaStreamConstraints - optinal if {streamTitle} is an
+	  *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
+	  */
+	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
+	    console.log('MediaPeer.play');
+	    stream = {
+	      title: streamTitle,
+	      options: peerOptions,
+	      constraints: mediaStreamConstraints
+	    };
+	    if (stream.constraints) startStream();else joinStream();
+	  };
+
+	  /** Request access to the user`s media devices to capture a stream */
+	  var startStream = function startStream() {
+	    navigator.mediaDevices.getUserMedia(stream.constraints).then(onStream).catch(_this.onError);
+	  };
+
+	  /** Join an existing stream by downloading it from another peer*/
+	  var joinStream = function joinStream() {
+	    parent = new ParentConnection(servers, signaling);
+	    parent.onError = _this.onError;
+	    parent.onStream = onStream;
+	    parent.onDisconnect = rejoinStream;
+	    parent.onConnect = function () {
+	      signaling.con(parent.parentId);
+	    }; //DEBUG
+	    parent.join(stream.title);
+	  };
+
+	  /** When parent is disconnected close all children connecions and rejoin */
+	  var rejoinStream = function rejoinStream() {
+	    children.forEach(function (child) {
+	      child.close();
+	    });
+	    children = [];
+	    joinStream();
+	  };
+
+	  /** When start receiving a stream, display it and start distributing it */
+	  var onStream = function onStream(streamTracks) {
+	    stream.tracks = streamTracks;
+	    _this.displayStream(stream.tracks);
+	    acceptNextChild();
+	  };
+
+	  /** Upload stream to a new child if it has enough resources */
+	  var acceptNextChild = function acceptNextChild() {
+	    //Reject new child connections if there are no resources
+	    if (children.length >= MAX_CHILDREN) return;
+	    var child = new ChildConnection(servers, signaling);
+	    child.onError = _this.onError;
+	    child.onConnect = acceptNextChild;
+	    child.onDisconnect = replaceChild(child);
+	    child.setStream(stream);
+	    child.listen();
+	    children.push(child);
+	  };
+
+	  /** When a child is disconnected release resources to receive a new one */
+	  var replaceChild = function replaceChild(child) {
+	    return function () {
+	      removeChild(child);
+	      acceptNextChild();
+	    };
+	  };
+
+	  /** Remove child from children list */
+	  var removeChild = function removeChild(child) {
+	    var i = children.indexOf(child);
+	    if (i > -1) children.splice(i, 1);
+	  };
+	};
+
+	module.exports = MediaPeer;
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	* Implements a text protocol over websocket that allow peers to exchange SDP
+	* messages in a offer/answer model and notify tracker of availability
+	*/
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SignalingChannel = function SignalingChannel(socket) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, SignalingChannel);
+
+	  //public
+	  this.description = null;
+	  this.onReceiveDescription = Function.prototype;
+	  this.onRequestDescriptionTimeout = Function.prototype;
+	  //private
+	  var SEND_DESCRIPTION = 'send_description';
+	  var REQUEST_DESCRIPTION = 'request_description';
+	  var AVAILABLE = 'available';
+	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
+	  var gotDescription = false;
+
+	  /**
+	  * Sends a message to the tracker asking for a peer to send a description
+	  * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
+	  * this.onRequestDescriptionTimeout
+	  * @param {string} streamTitle - title of an existing stream
+	  */
+	  this.requestDescription = function (streamTitle) {
+	    gotDescription = false;
+	    console.log('-> REQUEST_DESCRIPTION');
+	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
+	    var retry = function retry() {
+	      if (!gotDescription) {
+	        console.log('retry REQUEST_DESCRIPTION');
+	        _this.onRequestDescriptionTimeout();
+	      }
+	    };
+	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
+	  };
+
+	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
+	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
+	    console.log('<- REQUEST_DESCRIPTION');
+	    if (target === socket.id) {
+	      _this.sendDescription(origin, _this.description);
+	    }
+	  });
+
+	  /**
+	  * sends a message to the tracker asking for delivering a description to a
+	  * peer
+	  * @param {Integer} target - id of the target peer
+	  * @param {string} description - SDP message
+	  */
+	  this.sendDescription = function (target, description) {
+	    console.log('-> SEND_DESCRIPTION');
+	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
+	  };
+
+	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
+	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
+	    console.log('<- SEND_DESCRIPTION');
+	    gotDescription = true;
+	    if (target === socket.id) _this.onReceiveDescription(origin, description);
+	  });
+
+	  /**
+	  * Notifies tracker that this peer is available
+	  * @param {string} streamTitle - Title of the stream this peer is uploading
+	  * @param {dictionary} peerOptions - Options for helping the tracker to optimize
+	  *   peer selection @see:MediaPeer
+	  */
+	  this.available = function (streamTitle, peerOptions) {
+	    console.log('AVAILABLE');
+	    socket.emit(AVAILABLE, streamTitle, peerOptions, socket.id);
+	  };
+
+	  //DEBUG: used o build a debug tree on the tracker
+	  this.con = function (parent) {
+	    socket.emit('con', parent, socket.id);
+	  };
+	};
+
+	module.exports = SignalingChannel;
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	__webpack_require__(13);
+	var util = __webpack_require__(8);
+
+	/** Downloads a stream from a peer */
+
+	var ParentConnection = function ParentConnection(servers, signaling) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, ParentConnection);
+
+	  //public
+	  this.parentId = null;
+	  this.onConnect = Function.prototype;
+	  this.onStream = Function.prototype;
+	  this.onDisconnect = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var connection = new RTCPeerConnection(servers);
+
+	  this.join = function (streamTitle) {
+	    util.onaddstream(connection, _this.onStream.bind(_this));
+	    connection.oniceconnectionstatechange = handleConnectionStates;
+	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
+	    signaling.onReceiveDescription = onReceiveDescription;
+	    signaling.requestDescription(streamTitle);
+	  };
+
+	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
+	    _this.parentId = parentId;
+	    remoteDescription = new RTCSessionDescription(remoteDescription);
+	    connection.setRemoteDescription(remoteDescription);
+	    connection.createAnswer(answerDescription, _this.onError);
+	  };
+
+	  var answerDescription = function answerDescription(localDescription) {
+	    connection.setLocalDescription(localDescription);
+	    signaling.sendDescription(_this.parentId, localDescription);
+	  };
+
+	  var handleConnectionStates = function handleConnectionStates() {
+	    var state = connection.iceConnectionState;
+	    if (state === util.ConnectionState.connected) _this.onConnect();else if (state === util.ConnectionState.disconnected) {
+	      _this.onDisconnect();
+	      connection.close();
+	    }
+	  };
+	};
+
+	module.exports = ParentConnection;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	__webpack_require__(13);
+	var util = __webpack_require__(8);
+
+	/** Uploads a stream to a peer */
+
+	var ChildConnection = function ChildConnection(servers, signaling) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, ChildConnection);
+
+	  //public
+	  this.streamTitle = null;
+	  this.options = null;
+	  this.onConnect = Function.prototype;
+	  this.onDisconnect = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var connection = new RTCPeerConnection(servers);
+	  var stream = null;
+	  var state = null;
+	  var connected = false;
+
+	  this.isConnected = function () {
+	    return connected;
+	  };
+
+	  this.getState = function () {
+	    return state;
+	  };
+
+	  this.setStream = function (_stream) {
+	    connection.oniceconnectionstatechange = handleConnectionStates;
+	    connection.onicecandidate = waitConnection;
+	    if (stream !== null) util.removeStream(connection, stream.tracks);
+	    stream = _stream;
+	    util.addStream(connection, stream.tracks);
+	  };
+
+	  this.listen = function () {
+	    if (state === util.ConnectionState.connected) return;
+	    var setLocalDescription = connection.setLocalDescription.bind(connection);
+	    connection.createOffer(setLocalDescription, _this.onError);
+	    signaling.onReceiveDescription = acceptConnection;
+	  };
+
+	  var waitConnection = function waitConnection(event) {
+	    //If all candidates were collected
+	    if (event.candidate === null) {
+	      signaling.description = connection.localDescription;
+	      signaling.available(stream.title, _this.options);
+	    }
+	  };
+
+	  var acceptConnection = function acceptConnection(childId, remoteDescription) {
+	    remoteDescription = new RTCSessionDescription(remoteDescription);
+	    connection.setRemoteDescription(remoteDescription);
+	  };
+
+	  var handleConnectionStates = function handleConnectionStates() {
+	    state = connection.iceConnectionState;
+	    if (state === util.ConnectionState.connected) {
+	      connected = true;
+	      _this.onConnect();
+	    } else if (state === util.ConnectionState.disconnected) {
+	      connected = false;
+	      _this.onDisconnect();
+	      connection.close();
+	    }
+	  };
+
+	  this.close = connection.close.bind(connection);
+	};
+
+	module.exports = ChildConnection;
 
 /***/ }
 /******/ ]);
