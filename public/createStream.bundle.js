@@ -13255,6 +13255,10 @@
 
 	'use strict';
 
+	var _stringify = __webpack_require__(21);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	var _classCallCheck2 = __webpack_require__(5);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -13308,7 +13312,7 @@
 
 	  var waitConnection = function waitConnection(event) {
 	    //If all candidates were collected
-	    console.log('ChildConnection candidate ' + event.candidate);
+	    console.log('ChildConnection candidate ' + (0, _stringify2.default)(event.candidate));
 	    if (event.candidate === null) {
 	      signaling.description = connection.localDescription;
 	      signaling.available(stream.title, _this.options);
@@ -13357,6 +13361,29 @@
 	'stun:stun2.l.google.com:19302',
 	'stun:stun1.l.google.com:19302'
 	*/
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(22), __esModule: true };
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(23)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
+
+/***/ },
+/* 23 */
+/***/ function(module, exports) {
+
+	var core = module.exports = {version: '2.4.0'};
+	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ }
 /******/ ]);

@@ -42,7 +42,7 @@ class ChildConnection{
 
     const waitConnection = event=>{
       //If all candidates were collected
-      console.log('ChildConnection candidate ' + event.candidate)
+      console.log('ChildConnection candidate ' + JSON.stringify(event.candidate))
       if(event.candidate === null){
         signaling.description = connection.localDescription
         signaling.available(stream.title, this.options)
