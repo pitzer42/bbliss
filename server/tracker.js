@@ -2,7 +2,7 @@ const fluxo = require('./fluxoServer')
 const dictodot = require('./dictodot')
 const clients = {}
 const tree = {}
-const NODE_ID_OFFSET = 2
+const NODE_ID_OFFSET = 0
 const NODE_ID_LENGTH = 5
 
 function addToClients(socket){
