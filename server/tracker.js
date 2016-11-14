@@ -89,7 +89,7 @@ function onDisconnect(socket){
 }
 
 function hookClient(socket){
-  addToClients(socket.client)
+  addToClients(socket)
   socket.on('available', onAvailable)
   socket.on('request_description', onRequestDescription)
   socket.on('send_description', onSendDescription)
