@@ -51,12 +51,9 @@
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
 	var MediaPeer = __webpack_require__(4);
-	var servers = {
-	  'iceServers': [{
-	    'url': 'stun:stun.l.google.com:19302'
-	  }]
-	};
 	var socket = io();
+
+	var servers = __webpack_require__(20);
 
 	socket.on('connect', function () {
 	  var peer = new MediaPeer(servers, socket);
@@ -13308,6 +13305,18 @@
 	};
 
 	module.exports = ChildConnection;
+
+/***/ },
+/* 20 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = {
+	  'iceServers': [{
+	    'urls': ['stun:stun.l.google.com:19302', 'stun:stun01.sipphone.com', 'stun:stun.ekiga.net', 'stun:stunserver.org', 'stun:stun4.l.google.com:19302', 'stun:stun3.l.google.com:19302', 'stun:stun2.l.google.com:19302', 'stun:stun1.l.google.com:19302']
+	  }]
+	};
 
 /***/ }
 /******/ ]);

@@ -3,12 +3,9 @@ const $ = require('jquery')
 const localizer = require('localizer')
 const titleInput = $('input[name=title]')
 const MediaPeer = require('../streaming/MediaPeer')
-const servers = {
-  'iceServers': [{
-    'url': 'stun:stun.l.google.com:19302'
-  }]
-}
 const socket = io()
+
+const servers = require('../iceServers')
 
 socket.on('connect', ()=>{
   const peer = new MediaPeer(servers, socket)

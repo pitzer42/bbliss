@@ -10,17 +10,14 @@ const channelInput = $('input[name=channel]')
 const netInfoInput = $('input[name=netInfo]')
 const subtitle = $('h2')
 
+const servers = require('../iceServers')
+
 function createStream(){
   disableSubmitButton()
   localizer(location=>{
     const title = titleInput.val()
     const socket = io()
     socket.on('connect', ()=>{
-      const servers = {
-        'iceServers': [{
-          'url': 'stun:stun.l.google.com:19302'
-        }]
-      }
       const mediaConstraints = {
         audio: false,
         video: true
