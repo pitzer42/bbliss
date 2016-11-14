@@ -13282,6 +13282,7 @@
 
 	  var waitConnection = function waitConnection(event) {
 	    //If all candidates were collected
+	    if (event.candidate.candidate.indexOf('host') > -1) return;
 	    console.log('ChildConnection candidate ' + (0, _stringify2.default)(event.candidate));
 	    if (event.candidate === null) {
 	      signaling.description = connection.localDescription;
