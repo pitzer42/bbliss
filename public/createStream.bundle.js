@@ -10233,6 +10233,19 @@
 	"use strict";
 
 	module.exports = {
+	  "rtcpMuxPolicy": "require",
+	  "bundlePolicy": "max-bundle",
+	  "iceServers": [{
+	    "urls": ["turn:74.125.134.127:19305?transport=udp", "turn:[2607:F8B0:400C:C00::7F]:19305?transport=udp", "turn:74.125.134.127:443?transport=tcp", "turn:[2607:F8B0:400C:C00::7F]:443?transport=tcp"],
+	    "username": "CMCmrMEFEgatrPmq4N4Yzc/s6OMT",
+	    "credential": "mNoNrLjcYi5Lf4rHxeqiCf+/hvw="
+	  }, {
+	    "urls": ["stun:stun.l.google.com:19302"]
+	  }],
+	  "iceTransports": "all"
+	};
+	/*
+	module.exports ={
 	  "iceServers": [{
 	    "urls": "stun:turn02.uswest.xirsys.com"
 	  }, {
@@ -10260,7 +10273,9 @@
 	    "urls": "turns:turn02.uswest.xirsys.com:5349?transport=tcp",
 	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
 	  }]
-	};
+	}
+	*/
+
 	/*
 
 	var iceServers = [];
@@ -10289,21 +10304,6 @@
 	iceServers: iceServers,
 	iceTransports: 'all'
 	};
-	*/
-
-	/*
-	module.exports = {
-	"rtcpMuxPolicy": "require",
-	"bundlePolicy": "max-bundle",
-	"iceServers": [{
-	"urls": ["turn:74.125.134.127:19305?transport=udp", "turn:[2607:F8B0:400C:C00::7F]:19305?transport=udp", "turn:74.125.134.127:443?transport=tcp", "turn:[2607:F8B0:400C:C00::7F]:443?transport=tcp"],
-	"username": "CMCmrMEFEgatrPmq4N4Yzc/s6OMT",
-	"credential": "mNoNrLjcYi5Lf4rHxeqiCf+/hvw="
-	}, {
-	"urls": ["stun:stun.l.google.com:19302"]
-	}],
-	"iceTransports": "all"
-	}
 	*/
 
 	/*
