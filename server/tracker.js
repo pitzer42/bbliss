@@ -57,10 +57,6 @@ function onAvailable(title, options, origin){
 function onRequestDescription(origin, title){
   fluxo.findStream(title, stream =>{
     const leafId = stream.peers[0]
-    console.log('looking for ' + leafId)
-    for(let key in clients){
-      console.log('client ' + key)
-    }
     const leaf = clients[leafId]
     if(leaf){
       fluxo.popPeer(title)
