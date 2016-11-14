@@ -60,5 +60,5 @@ exports.availablePeers = (title, onResult) =>{
 }
 
 function logError(error){
-  console.log('DBERRO: ' + error)
+  console.log('DBERROR: ' + JSON.stringify(error))
 }
