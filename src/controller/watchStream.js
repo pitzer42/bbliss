@@ -3,7 +3,7 @@ const $ = require('jquery')
 const localizer = require('localizer')
 const titleInput = $('input[name=title]')
 const MediaPeer = require('../streaming/MediaPeer')
-const servers = null
+const servers = 'stun:stun.l.google.com:19302'
 const socket = io()
 
 socket.on('connect', ()=>{
