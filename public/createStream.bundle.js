@@ -64,7 +64,11 @@
 	    var title = titleInput.val();
 	    var socket = io();
 	    socket.on('connect', function () {
-	      var servers = 'stun:stun.l.google.com:19302';
+	      var servers = {
+	        'iceServers': [{
+	          'url': 'stun:stun.l.google.com:19302'
+	        }]
+	      };
 	      var mediaConstraints = {
 	        audio: false,
 	        video: true

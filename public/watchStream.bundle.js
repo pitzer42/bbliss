@@ -51,7 +51,11 @@
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
 	var MediaPeer = __webpack_require__(4);
-	var servers = 'stun:stun.l.google.com:19302';
+	var servers = {
+	  'iceServers': [{
+	    'url': 'stun:stun.l.google.com:19302'
+	  }]
+	};
 	var socket = io();
 
 	socket.on('connect', function () {
