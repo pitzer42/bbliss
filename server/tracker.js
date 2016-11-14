@@ -58,7 +58,7 @@ function onRequestDescription(origin, title){
   fluxo.findStream(title, stream =>{
     const leafId = stream.peers[0]
     console.log('looking for ' + leafId)
-    for(key in clients){
+    for(let key in clients){
       console.log('client ' + key)
     }
     const leaf = clients[leafId]
