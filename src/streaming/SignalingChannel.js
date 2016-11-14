@@ -26,11 +26,11 @@ class SignalingChannel{
     */
     this.requestDescription = streamTitle=>{
       gotDescription = false
-      console.log('-> REQUEST_DESCRIPTION');
+      //console.log('-> REQUEST_DESCRIPTION')//DEBUG
       socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle)
       const retry = ()=>{
         if(!gotDescription){
-          console.log('retry REQUEST_DESCRIPTION')
+          //console.log('retry REQUEST_DESCRIPTION')//DEBUG
           this.onRequestDescriptionTimeout()
         }
       }
@@ -39,7 +39,7 @@ class SignalingChannel{
 
     /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
     socket.on(REQUEST_DESCRIPTION, (origin, target) =>{
-      console.log('<- REQUEST_DESCRIPTION');
+      //console.log('<- REQUEST_DESCRIPTION')//DEBUG
       if(target === socket.id){
         this.sendDescription(origin, this.description)
       }
@@ -52,13 +52,13 @@ class SignalingChannel{
     * @param {string} description - SDP message
     */
     this.sendDescription = (target, description)=>{
-      console.log('-> SEND_DESCRIPTION');
+      //console.log('-> SEND_DESCRIPTION')//DEBUG
       socket.emit(SEND_DESCRIPTION, socket.id, target, description)
     }
 
     /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
     socket.on(SEND_DESCRIPTION, (origin, target, description) =>{
-      console.log('<- SEND_DESCRIPTION');
+      //console.log('<- SEND_DESCRIPTION')//DEBUG
       gotDescription = true
       if(target === socket.id)
       this.onReceiveDescription(origin, description)
@@ -77,6 +77,7 @@ class SignalingChannel{
 
     //DEBUG: used o build a debug tree on the tracker
     this.con = (parent)=>{
+      console.log(parent + ' -> ' + socket.id)
       socket.emit('con', parent, socket.id)
     }
   }

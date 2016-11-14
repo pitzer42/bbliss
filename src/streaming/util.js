@@ -16,7 +16,6 @@ function addStream(connection, stream){
   try{
     const track = stream.getVideoTracks()[0];
     connection.sender = connection.addTrack(track, stream);
-    console.log('+++++++++ sender ' + JSON.stringify(connection.sender))
   }catch(e){
     connection.addStream(stream)
   }
@@ -24,7 +23,6 @@ function addStream(connection, stream){
 
 function removeStream(connection, stream){
   try{
-    console.log('+++++++++ sender ' + JSON.stringify(connection.sender))
     connection.removeTrack(connection.sender)
   }catch(e){
     connection.removeStream(stream)

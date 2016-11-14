@@ -50,7 +50,7 @@
 	var $ = __webpack_require__(2);
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
-	var MediaPeer = __webpack_require__(23);
+	var MediaPeer = __webpack_require__(4);
 	var servers = null;
 	var socket = io();
 
@@ -10196,7 +10196,144 @@
 	module.exports = setStream;
 
 /***/ },
-/* 4 */,
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SignalingChannel = __webpack_require__(6);
+	var ParentConnection = __webpack_require__(7);
+	var ChildConnection = __webpack_require__(22);
+
+	/**
+	* Returns a maximun children value based on empirical observation considering
+	* this device`s resources
+	*/
+	function calculateMaxChildrenCount() {
+	  var mobile = [];
+	  var oscpu = navigator.oscpu;
+	  var isMobile = mobile.some(function (item) {
+	    return item === oscpu;
+	  });
+	  return isMobile ? 1 : 2;
+	}
+
+	/**
+	* Coordinates states and comunication channels to download a stream and upload it
+	* to its children.
+	*/
+
+	var MediaPeer =
+
+	/**
+	* @param {string} servers - address of an ICE/TURN/STUN server
+	* @param {io.socket} trackerSocket - socket connection with a tracker
+	*/
+	function MediaPeer(servers, trackerSocket) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, MediaPeer);
+
+	  console.log(trackerSocket.id); //DEBUG
+	  //public
+	  this.displayStream = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var MAX_CHILDREN = calculateMaxChildrenCount();
+	  var signaling = new SignalingChannel(trackerSocket);
+	  var stream = null;
+	  var parent = null;
+	  var children = [];
+
+	  /**
+	  * Starts a new stream if {streamTitle} is not in the active streams
+	  * list in the tracker, or joins an existing stream.
+	  * @param {string} streamTitle - Title of a new or an existing stream
+	  * @param {dictionary} peerOptions - Options for helping the tracker to
+	  *     optimize peer selection. ex: {location:"123,523"}
+	  * @param {dictionary} mediaStreamConstraints - optinal if {streamTitle} is an
+	  *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
+	  */
+	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
+	    stream = {
+	      title: streamTitle,
+	      options: peerOptions,
+	      constraints: mediaStreamConstraints
+	    };
+	    if (stream.constraints) startStream();else joinStream();
+	  };
+
+	  /** Request access to the user`s media devices to capture a stream */
+	  var startStream = function startStream() {
+	    navigator.mediaDevices.getUserMedia(stream.constraints).then(onStream).catch(_this.onError);
+	  };
+
+	  /** Join an existing stream by downloading it from another peer*/
+	  var joinStream = function joinStream() {
+	    parent = new ParentConnection(servers, signaling);
+	    parent.onError = _this.onError;
+	    parent.onStream = onStream;
+	    parent.onDisconnect = rejoinStream;
+	    parent.onConnect = function () {
+	      signaling.con(parent.parentId);
+	    }; //DEBUG
+	    parent.join(stream.title);
+	  };
+
+	  /** When parent is disconnected close all children connecions and rejoin */
+	  var rejoinStream = function rejoinStream() {
+	    console.log('MediaPeer.rejoinStream');
+	    children.forEach(function (child) {
+	      child.close();
+	    });
+	    children = [];
+	    joinStream();
+	  };
+
+	  /** When start receiving a stream, display it and start distributing it */
+	  var onStream = function onStream(streamTracks) {
+	    stream.tracks = streamTracks;
+	    _this.displayStream(stream.tracks);
+	    acceptNextChild();
+	  };
+
+	  /** Upload stream to a new child if it has enough resources */
+	  var acceptNextChild = function acceptNextChild() {
+	    //Reject new child connections if there are no resources
+	    if (children.length >= MAX_CHILDREN) return;
+	    var child = new ChildConnection(servers, signaling);
+	    child.onError = _this.onError;
+	    child.onConnect = acceptNextChild;
+	    child.onDisconnect = replaceChild(child);
+	    child.setStream(stream);
+	    child.listen();
+	    children.push(child);
+	  };
+
+	  /** When a child is disconnected release resources to receive a new one */
+	  var replaceChild = function replaceChild(child) {
+	    return function () {
+	      removeChild(child);
+	      acceptNextChild();
+	    };
+	  };
+
+	  /** Remove child from children list */
+	  var removeChild = function removeChild(child) {
+	    var i = children.indexOf(child);
+	    if (i > -1) children.splice(i, 1);
+	  };
+	};
+
+	module.exports = MediaPeer;
+
+/***/ },
 /* 5 */
 /***/ function(module, exports) {
 
@@ -10211,84 +10348,167 @@
 	};
 
 /***/ },
-/* 6 */,
-/* 7 */,
-/* 8 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _stringify = __webpack_require__(9);
+	/**
+	* Implements a text protocol over websocket that allow peers to exchange SDP
+	* messages in a offer/answer model and notify tracker of availability
+	*/
 
-	var _stringify2 = _interopRequireDefault(_stringify);
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
+	var SignalingChannel = function SignalingChannel(socket) {
+	  var _this = this;
 
-	function onaddstream(connection, f) {
-	  try {
-	    if (connection.onaddtrack) connection.ontrack = connection.onaddtrack;
-	    connection.ontrack = function (event) {
-	      f(event.streams[0]);
+	  (0, _classCallCheck3.default)(this, SignalingChannel);
+
+	  //public
+	  this.description = null;
+	  this.onReceiveDescription = Function.prototype;
+	  this.onRequestDescriptionTimeout = Function.prototype;
+	  //private
+	  var SEND_DESCRIPTION = 'send_description';
+	  var REQUEST_DESCRIPTION = 'request_description';
+	  var AVAILABLE = 'available';
+	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
+	  var gotDescription = false;
+
+	  /**
+	  * Sends a message to the tracker asking for a peer to send a description
+	  * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
+	  * this.onRequestDescriptionTimeout
+	  * @param {string} streamTitle - title of an existing stream
+	  */
+	  this.requestDescription = function (streamTitle) {
+	    gotDescription = false;
+	    //console.log('-> REQUEST_DESCRIPTION')//DEBUG
+	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
+	    var retry = function retry() {
+	      if (!gotDescription) {
+	        //console.log('retry REQUEST_DESCRIPTION')//DEBUG
+	        _this.onRequestDescriptionTimeout();
+	      }
 	    };
-	  } catch (e) {
-	    connection.onaddstream = function (event) {
-	      f(event.stream);
-	    };
-	  }
-	}
+	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
+	  };
 
-	function addStream(connection, stream) {
-	  try {
-	    var track = stream.getVideoTracks()[0];
-	    connection.sender = connection.addTrack(track, stream);
-	    console.log('+++++++++ sender ' + (0, _stringify2.default)(connection.sender));
-	  } catch (e) {
-	    connection.addStream(stream);
-	  }
-	}
+	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
+	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
+	    //console.log('<- REQUEST_DESCRIPTION')//DEBUG
+	    if (target === socket.id) {
+	      _this.sendDescription(origin, _this.description);
+	    }
+	  });
 
-	function removeStream(connection, stream) {
-	  try {
-	    console.log('+++++++++ sender ' + (0, _stringify2.default)(connection.sender));
-	    connection.removeTrack(connection.sender);
-	  } catch (e) {
-	    connection.removeStream(stream);
-	  }
-	}
+	  /**
+	  * sends a message to the tracker asking for delivering a description to a
+	  * peer
+	  * @param {Integer} target - id of the target peer
+	  * @param {string} description - SDP message
+	  */
+	  this.sendDescription = function (target, description) {
+	    //console.log('-> SEND_DESCRIPTION')//DEBUG
+	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
+	  };
 
-	exports.onaddstream = onaddstream;
-	exports.addStream = addStream;
-	exports.removeStream = removeStream;
-	exports.ConnectionState = ConnectionState;
+	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
+	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
+	    //console.log('<- SEND_DESCRIPTION')//DEBUG
+	    gotDescription = true;
+	    if (target === socket.id) _this.onReceiveDescription(origin, description);
+	  });
 
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
+	  /**
+	  * Notifies tracker that this peer is available
+	  * @param {string} streamTitle - Title of the stream this peer is uploading
+	  * @param {dictionary} peerOptions - Options for helping the tracker to optimize
+	  *   peer selection @see:MediaPeer
+	  */
+	  this.available = function (streamTitle, peerOptions) {
+	    console.log('AVAILABLE');
+	    socket.emit(AVAILABLE, streamTitle, peerOptions, socket.id);
+	  };
 
-	module.exports = { "default": __webpack_require__(10), __esModule: true };
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(11)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
+	  //DEBUG: used o build a debug tree on the tracker
+	  this.con = function (parent) {
+	    console.log(parent + ' -> ' + socket.id);
+	    socket.emit('con', parent, socket.id);
+	  };
 	};
 
-/***/ },
-/* 11 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '2.4.0'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
+	module.exports = SignalingChannel;
 
 /***/ },
-/* 12 */,
-/* 13 */
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(5);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	__webpack_require__(8);
+	var util = __webpack_require__(18);
+
+	/** Downloads a stream from a peer */
+
+	var ParentConnection = function ParentConnection(servers, signaling) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, ParentConnection);
+
+	  //public
+	  this.parentId = null;
+	  this.onConnect = Function.prototype;
+	  this.onStream = Function.prototype;
+	  this.onDisconnect = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var connection = new RTCPeerConnection(servers);
+
+	  this.join = function (streamTitle) {
+	    util.onaddstream(connection, _this.onStream.bind(_this));
+	    connection.oniceconnectionstatechange = handleConnectionStates;
+	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
+	    signaling.onReceiveDescription = onReceiveDescription;
+	    signaling.requestDescription(streamTitle);
+	  };
+
+	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
+	    _this.parentId = parentId;
+	    remoteDescription = new RTCSessionDescription(remoteDescription);
+	    connection.setRemoteDescription(remoteDescription);
+	    connection.createAnswer(answerDescription, _this.onError);
+	  };
+
+	  var answerDescription = function answerDescription(localDescription) {
+	    connection.setLocalDescription(localDescription);
+	    signaling.sendDescription(_this.parentId, localDescription);
+	  };
+
+	  var handleConnectionStates = function handleConnectionStates() {
+	    var state = connection.iceConnectionState;
+	    if (state === util.ConnectionState.connected) _this.onConnect();else if (state === util.ConnectionState.disconnected) {
+	      _this.onDisconnect();
+	      connection.close();
+	    }
+	  };
+	};
+
+	module.exports = ParentConnection;
+
+/***/ },
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10305,12 +10525,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(14).log;
-	  var browserDetails = __webpack_require__(14).browserDetails;
+	  var logging = __webpack_require__(9).log;
+	  var browserDetails = __webpack_require__(9).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(14).extractVersion;
-	  module.exports.disableLog = __webpack_require__(14).disableLog;
+	  module.exports.extractVersion = __webpack_require__(9).extractVersion;
+	  module.exports.disableLog = __webpack_require__(9).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10319,10 +10539,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(15) || null;
-	  var edgeShim = __webpack_require__(17) || null;
-	  var firefoxShim = __webpack_require__(20) || null;
-	  var safariShim = __webpack_require__(22) || null;
+	  var chromeShim = __webpack_require__(10) || null;
+	  var edgeShim = __webpack_require__(12) || null;
+	  var firefoxShim = __webpack_require__(15) || null;
+	  var safariShim = __webpack_require__(17) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10386,7 +10606,7 @@
 
 
 /***/ },
-/* 14 */
+/* 9 */
 /***/ function(module, exports) {
 
 	/*
@@ -10523,7 +10743,7 @@
 
 
 /***/ },
-/* 15 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10536,8 +10756,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(14).log;
-	var browserDetails = __webpack_require__(14).browserDetails;
+	var logging = __webpack_require__(9).log;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -10784,12 +11004,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(16)
+	  shimGetUserMedia: __webpack_require__(11)
 	};
 
 
 /***/ },
-/* 16 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10801,7 +11021,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(14).log;
+	var logging = __webpack_require__(9).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -10984,7 +11204,7 @@
 
 
 /***/ },
-/* 17 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10997,8 +11217,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(18);
-	var browserDetails = __webpack_require__(14).browserDetails;
+	var SDPUtils = __webpack_require__(13);
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12056,12 +12276,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(19)
+	  shimGetUserMedia: __webpack_require__(14)
 	};
 
 
 /***/ },
-/* 18 */
+/* 13 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12558,7 +12778,7 @@
 
 
 /***/ },
-/* 19 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/*
@@ -12596,7 +12816,7 @@
 
 
 /***/ },
-/* 20 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12609,7 +12829,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(14).browserDetails;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12752,12 +12972,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(21)
+	  shimGetUserMedia: __webpack_require__(16)
 	};
 
 
 /***/ },
-/* 21 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12770,8 +12990,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(14).log;
-	var browserDetails = __webpack_require__(14).browserDetails;
+	var logging = __webpack_require__(9).log;
+	var browserDetails = __webpack_require__(9).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -12913,7 +13133,7 @@
 
 
 /***/ },
-/* 22 */
+/* 17 */
 /***/ function(module, exports) {
 
 	/*
@@ -12947,242 +13167,53 @@
 
 
 /***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
+/* 18 */
+/***/ function(module, exports) {
 
 	'use strict';
 
-	var _classCallCheck2 = __webpack_require__(5);
+	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
 
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var SignalingChannel = __webpack_require__(24);
-	var ParentConnection = __webpack_require__(25);
-	var ChildConnection = __webpack_require__(26);
-
-	/**
-	* Returns a maximun children value based on empirical observation considering
-	* this device`s resources
-	*/
-	function calculateMaxChildrenCount() {
-	  var mobile = [];
-	  var oscpu = navigator.oscpu;
-	  var isMobile = mobile.some(function (item) {
-	    return item === oscpu;
-	  });
-	  return isMobile ? 1 : 2;
+	function onaddstream(connection, f) {
+	  try {
+	    if (connection.onaddtrack) connection.ontrack = connection.onaddtrack;
+	    connection.ontrack = function (event) {
+	      f(event.streams[0]);
+	    };
+	  } catch (e) {
+	    connection.onaddstream = function (event) {
+	      f(event.stream);
+	    };
+	  }
 	}
 
-	/**
-	* Coordinates states and comunication channels to download a stream and upload it
-	* to its children.
-	*/
+	function addStream(connection, stream) {
+	  try {
+	    var track = stream.getVideoTracks()[0];
+	    connection.sender = connection.addTrack(track, stream);
+	  } catch (e) {
+	    connection.addStream(stream);
+	  }
+	}
 
-	var MediaPeer =
+	function removeStream(connection, stream) {
+	  try {
+	    connection.removeTrack(connection.sender);
+	  } catch (e) {
+	    connection.removeStream(stream);
+	  }
+	}
 
-	/**
-	* @param {string} servers - address of an ICE/TURN/STUN server
-	* @param {io.socket} trackerSocket - socket connection with a tracker
-	*/
-	function MediaPeer(servers, trackerSocket) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, MediaPeer);
-
-	  console.log(trackerSocket.id); //DEBUG
-	  //public
-	  this.displayStream = Function.prototype;
-	  this.onError = Function.prototype;
-	  //private
-	  var MAX_CHILDREN = calculateMaxChildrenCount();
-	  var signaling = new SignalingChannel(trackerSocket);
-	  var stream = null;
-	  var parent = null;
-	  var children = [];
-
-	  /**
-	  * Starts a new stream if {streamTitle} is not in the active streams
-	  * list in the tracker, or joins an existing stream.
-	  * @param {string} streamTitle - Title of a new or an existing stream
-	  * @param {dictionary} peerOptions - Options for helping the tracker to
-	  *     optimize peer selection. ex: {location:"123,523"}
-	  * @param {dictionary} mediaStreamConstraints - optinal if {streamTitle} is an
-	  *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
-	  */
-	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
-	    console.log('MediaPeer.play');
-	    stream = {
-	      title: streamTitle,
-	      options: peerOptions,
-	      constraints: mediaStreamConstraints
-	    };
-	    if (stream.constraints) startStream();else joinStream();
-	  };
-
-	  /** Request access to the user`s media devices to capture a stream */
-	  var startStream = function startStream() {
-	    navigator.mediaDevices.getUserMedia(stream.constraints).then(onStream).catch(_this.onError);
-	  };
-
-	  /** Join an existing stream by downloading it from another peer*/
-	  var joinStream = function joinStream() {
-	    parent = new ParentConnection(servers, signaling);
-	    parent.onError = _this.onError;
-	    parent.onStream = onStream;
-	    parent.onDisconnect = rejoinStream;
-	    parent.onConnect = function () {
-	      signaling.con(parent.parentId);
-	    }; //DEBUG
-	    parent.join(stream.title);
-	  };
-
-	  /** When parent is disconnected close all children connecions and rejoin */
-	  var rejoinStream = function rejoinStream() {
-	    children.forEach(function (child) {
-	      child.close();
-	    });
-	    children = [];
-	    joinStream();
-	  };
-
-	  /** When start receiving a stream, display it and start distributing it */
-	  var onStream = function onStream(streamTracks) {
-	    stream.tracks = streamTracks;
-	    _this.displayStream(stream.tracks);
-	    acceptNextChild();
-	  };
-
-	  /** Upload stream to a new child if it has enough resources */
-	  var acceptNextChild = function acceptNextChild() {
-	    //Reject new child connections if there are no resources
-	    if (children.length >= MAX_CHILDREN) return;
-	    var child = new ChildConnection(servers, signaling);
-	    child.onError = _this.onError;
-	    child.onConnect = acceptNextChild;
-	    child.onDisconnect = replaceChild(child);
-	    child.setStream(stream);
-	    child.listen();
-	    children.push(child);
-	  };
-
-	  /** When a child is disconnected release resources to receive a new one */
-	  var replaceChild = function replaceChild(child) {
-	    return function () {
-	      removeChild(child);
-	      acceptNextChild();
-	    };
-	  };
-
-	  /** Remove child from children list */
-	  var removeChild = function removeChild(child) {
-	    var i = children.indexOf(child);
-	    if (i > -1) children.splice(i, 1);
-	  };
-	};
-
-	module.exports = MediaPeer;
+	exports.onaddstream = onaddstream;
+	exports.addStream = addStream;
+	exports.removeStream = removeStream;
+	exports.ConnectionState = ConnectionState;
 
 /***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	/**
-	* Implements a text protocol over websocket that allow peers to exchange SDP
-	* messages in a offer/answer model and notify tracker of availability
-	*/
-
-	var _classCallCheck2 = __webpack_require__(5);
-
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var SignalingChannel = function SignalingChannel(socket) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, SignalingChannel);
-
-	  //public
-	  this.description = null;
-	  this.onReceiveDescription = Function.prototype;
-	  this.onRequestDescriptionTimeout = Function.prototype;
-	  //private
-	  var SEND_DESCRIPTION = 'send_description';
-	  var REQUEST_DESCRIPTION = 'request_description';
-	  var AVAILABLE = 'available';
-	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
-	  var gotDescription = false;
-
-	  /**
-	  * Sends a message to the tracker asking for a peer to send a description
-	  * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
-	  * this.onRequestDescriptionTimeout
-	  * @param {string} streamTitle - title of an existing stream
-	  */
-	  this.requestDescription = function (streamTitle) {
-	    gotDescription = false;
-	    console.log('-> REQUEST_DESCRIPTION');
-	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
-	    var retry = function retry() {
-	      if (!gotDescription) {
-	        console.log('retry REQUEST_DESCRIPTION');
-	        _this.onRequestDescriptionTimeout();
-	      }
-	    };
-	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
-	  };
-
-	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
-	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
-	    console.log('<- REQUEST_DESCRIPTION');
-	    if (target === socket.id) {
-	      _this.sendDescription(origin, _this.description);
-	    }
-	  });
-
-	  /**
-	  * sends a message to the tracker asking for delivering a description to a
-	  * peer
-	  * @param {Integer} target - id of the target peer
-	  * @param {string} description - SDP message
-	  */
-	  this.sendDescription = function (target, description) {
-	    console.log('-> SEND_DESCRIPTION');
-	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
-	  };
-
-	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
-	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
-	    console.log('<- SEND_DESCRIPTION');
-	    gotDescription = true;
-	    if (target === socket.id) _this.onReceiveDescription(origin, description);
-	  });
-
-	  /**
-	  * Notifies tracker that this peer is available
-	  * @param {string} streamTitle - Title of the stream this peer is uploading
-	  * @param {dictionary} peerOptions - Options for helping the tracker to optimize
-	  *   peer selection @see:MediaPeer
-	  */
-	  this.available = function (streamTitle, peerOptions) {
-	    console.log('AVAILABLE');
-	    socket.emit(AVAILABLE, streamTitle, peerOptions, socket.id);
-	  };
-
-	  //DEBUG: used o build a debug tree on the tracker
-	  this.con = function (parent) {
-	    socket.emit('con', parent, socket.id);
-	  };
-	};
-
-	module.exports = SignalingChannel;
-
-/***/ },
-/* 25 */
+/* 19 */,
+/* 20 */,
+/* 21 */,
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -13193,70 +13224,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(13);
-	var util = __webpack_require__(8);
-
-	/** Downloads a stream from a peer */
-
-	var ParentConnection = function ParentConnection(servers, signaling) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, ParentConnection);
-
-	  //public
-	  this.parentId = null;
-	  this.onConnect = Function.prototype;
-	  this.onStream = Function.prototype;
-	  this.onDisconnect = Function.prototype;
-	  this.onError = Function.prototype;
-	  //private
-	  var connection = new RTCPeerConnection(servers);
-
-	  this.join = function (streamTitle) {
-	    util.onaddstream(connection, _this.onStream.bind(_this));
-	    connection.oniceconnectionstatechange = handleConnectionStates;
-	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
-	    signaling.onReceiveDescription = onReceiveDescription;
-	    signaling.requestDescription(streamTitle);
-	  };
-
-	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
-	    _this.parentId = parentId;
-	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    connection.setRemoteDescription(remoteDescription);
-	    connection.createAnswer(answerDescription, _this.onError);
-	  };
-
-	  var answerDescription = function answerDescription(localDescription) {
-	    connection.setLocalDescription(localDescription);
-	    signaling.sendDescription(_this.parentId, localDescription);
-	  };
-
-	  var handleConnectionStates = function handleConnectionStates() {
-	    var state = connection.iceConnectionState;
-	    if (state === util.ConnectionState.connected) _this.onConnect();else if (state === util.ConnectionState.disconnected) {
-	      _this.onDisconnect();
-	      connection.close();
-	    }
-	  };
-	};
-
-	module.exports = ParentConnection;
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _classCallCheck2 = __webpack_require__(5);
-
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	__webpack_require__(13);
-	var util = __webpack_require__(8);
+	__webpack_require__(8);
+	var util = __webpack_require__(18);
 
 	/** Uploads a stream to a peer */
 

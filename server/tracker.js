@@ -1,24 +1,38 @@
 const fluxo = require('./fluxoServer')
+const dictodot = require('./dictodot')
 const clients = {}
 const tree = {}
+const NODE_ID_OFFSET = 2
+const NODE_ID_LENGTH = 5
 
 function addToClients(socket){
-  const id = socket.id.slice(2, socket.id.length)
+  const id = socket.id.slice(NODE_ID_OFFSET, socket.id.length)
   clients[id] = socket
 }
 
+function removeDuplicate(child){
+  for(let node in tree){
+    const i = tree[node].indexOf(child)
+    if(i > -1){
+      tree[node].splice(i, 1)
+      return
+    }
+  }
+}
+
 function addToTree(parent, child){
-  parent = parent.slice(0, 5)
-  child = child.slice(0, 5)
+  parent = parent.slice(0, NODE_ID_LENGTH)
+  child = child.slice(0, NODE_ID_LENGTH)
+  removeDuplicate(child)
   if(tree[parent])
   tree[parent].push(child)
   else
   tree[parent] = [child]
-  console.log(JSON.stringify(tree))
+  console.log(dictodot(tree))
 }
 
 function removeFromTree(node){
-  node = node.slice(2,7)
+  node = node.slice(NODE_ID_OFFSET, NODE_ID_OFFSET + NODE_ID_LENGTH)
   delete tree[node]
   for(let parent in tree){
     let children = tree[parent]
@@ -27,7 +41,7 @@ function removeFromTree(node){
       children.splice(i, 1)
     }
   }
-  console.log(JSON.stringify(tree))
+  console.log(dictodot(tree))
 }
 
 function onAvailable(title, options, origin){

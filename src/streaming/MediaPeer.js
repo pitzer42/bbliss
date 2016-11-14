@@ -47,7 +47,6 @@ class MediaPeer{
     *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
     */
     this.play = (streamTitle, peerOptions, mediaStreamConstraints)=>{
-      console.log('MediaPeer.play')
       stream = {
         title: streamTitle,
         options: peerOptions,
@@ -78,6 +77,7 @@ class MediaPeer{
 
     /** When parent is disconnected close all children connecions and rejoin */
     const rejoinStream = ()=>{
+      console.log('MediaPeer.rejoinStream')
       children.forEach(child=>{child.close()})
       children = []
       joinStream()
