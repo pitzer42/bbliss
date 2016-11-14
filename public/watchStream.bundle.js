@@ -13278,6 +13278,7 @@
 
 	  var waitConnection = function waitConnection(event) {
 	    //If all candidates were collected
+	    console.log('ChildConnection candidate ' + event.candidate);
 	    if (event.candidate === null) {
 	      signaling.description = connection.localDescription;
 	      signaling.available(stream.title, _this.options);
