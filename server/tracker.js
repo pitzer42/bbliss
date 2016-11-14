@@ -67,7 +67,7 @@ function onRequestDescription(origin, title){
     }
     else
     console.log('leaf not found for ' + title)
-    console.log(JSON.stringify(clients))
+    console.log(clients)
   })
 }
 
