@@ -66,7 +66,7 @@ function onRequestDescription(origin, title){
       leaf.emit('request_description', origin, stream.peers[0])
     }
     else
-    console.log('leaf not found for ' + stream.root +' ' +socket.id)
+    console.log('leaf not found for ' + title)
   })
 }
 

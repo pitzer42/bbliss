@@ -21,7 +21,8 @@ exports.findStream = (title, onResult) => {
   storage(db=>{
     const streams = db.collection('streams')
     const invokeOnResult = result=>{onResult(result[0])}
-    streams.findOne({title: title}).then(onResult).catch(logError)
+    const customLog = error=>{logError('fluxoServer.findStream: ' + error)}
+    streams.findOne({title: title}).then(onResult).catch(customLog)
     db.close()
   }, logError)
 }
@@ -60,5 +61,5 @@ exports.availablePeers = (title, onResult) =>{
 }
 
 function logError(error){
-  console.log('DBERROR: ' + JSON.stringify(error))
+  console.log('DBERROR: ' + error)
 }
