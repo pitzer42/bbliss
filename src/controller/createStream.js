@@ -16,7 +16,11 @@ function createStream(){
     const title = titleInput.val()
     const socket = io()
     socket.on('connect', ()=>{
-      const servers = 'stun:stun.l.google.com:19302'
+      const servers = {
+        'iceServers': [{
+          'url': 'stun:stun.l.google.com:19302'
+        }]
+      }
       const mediaConstraints = {
         audio: false,
         video: true
