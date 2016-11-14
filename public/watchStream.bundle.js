@@ -51,7 +51,7 @@
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
 	var MediaPeer = __webpack_require__(4);
-	var servers = null;
+	var servers = 'stun:stun.l.google.com:19302';
 	var socket = io();
 
 	socket.on('connect', function () {
@@ -10261,6 +10261,7 @@
 	  *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
 	  */
 	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
+	    console.log('MediaPeer.play'); //DEBUG
 	    stream = {
 	      title: streamTitle,
 	      options: peerOptions,
@@ -10271,11 +10272,13 @@
 
 	  /** Request access to the user`s media devices to capture a stream */
 	  var startStream = function startStream() {
+	    console.log('MediaPeer.startStream'); //DEBUG
 	    navigator.mediaDevices.getUserMedia(stream.constraints).then(onStream).catch(_this.onError);
 	  };
 
 	  /** Join an existing stream by downloading it from another peer*/
 	  var joinStream = function joinStream() {
+	    console.log('MediaPeer.joinStream'); //DEBUG
 	    parent = new ParentConnection(servers, signaling);
 	    parent.onError = _this.onError;
 	    parent.onStream = onStream;
@@ -10288,7 +10291,7 @@
 
 	  /** When parent is disconnected close all children connecions and rejoin */
 	  var rejoinStream = function rejoinStream() {
-	    console.log('MediaPeer.rejoinStream');
+	    console.log('MediaPeer.rejoinStream'); //DEBUG
 	    children.forEach(function (child) {
 	      child.close();
 	    });
@@ -10298,6 +10301,7 @@
 
 	  /** When start receiving a stream, display it and start distributing it */
 	  var onStream = function onStream(streamTracks) {
+	    console.log('MediaPeer.onStream'); //DEBUG
 	    stream.tracks = streamTracks;
 	    _this.displayStream(stream.tracks);
 	    acceptNextChild();
@@ -10305,8 +10309,12 @@
 
 	  /** Upload stream to a new child if it has enough resources */
 	  var acceptNextChild = function acceptNextChild() {
+	    console.log('MediaPeer.acceptNextChild'); //DEBUG
 	    //Reject new child connections if there are no resources
-	    if (children.length >= MAX_CHILDREN) return;
+	    if (children.length >= MAX_CHILDREN) {
+	      console.log('MediaPeer.rejectChild'); //DEBUG
+	      return;
+	    }
 	    var child = new ChildConnection(servers, signaling);
 	    child.onError = _this.onError;
 	    child.onConnect = acceptNextChild;
@@ -10319,6 +10327,7 @@
 	  /** When a child is disconnected release resources to receive a new one */
 	  var replaceChild = function replaceChild(child) {
 	    return function () {
+	      console.log('MediaPeer.replaceChild'); //DEBUG
 	      removeChild(child);
 	      acceptNextChild();
 	    };
@@ -10388,7 +10397,7 @@
 	  */
 	  this.requestDescription = function (streamTitle) {
 	    gotDescription = false;
-	    //console.log('-> REQUEST_DESCRIPTION')//DEBUG
+	    console.log('-> REQUEST_DESCRIPTION'); //DEBUG
 	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
 	    var retry = function retry() {
 	      if (!gotDescription) {
@@ -10401,7 +10410,7 @@
 
 	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
 	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
-	    //console.log('<- REQUEST_DESCRIPTION')//DEBUG
+	    console.log('<- REQUEST_DESCRIPTION'); //DEBUG
 	    if (target === socket.id) {
 	      _this.sendDescription(origin, _this.description);
 	    }
@@ -10414,13 +10423,13 @@
 	  * @param {string} description - SDP message
 	  */
 	  this.sendDescription = function (target, description) {
-	    //console.log('-> SEND_DESCRIPTION')//DEBUG
+	    console.log('-> SEND_DESCRIPTION'); //DEBUG
 	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
 	  };
 
 	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
 	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
-	    //console.log('<- SEND_DESCRIPTION')//DEBUG
+	    console.log('<- SEND_DESCRIPTION'); //DEBUG
 	    gotDescription = true;
 	    if (target === socket.id) _this.onReceiveDescription(origin, description);
 	  });

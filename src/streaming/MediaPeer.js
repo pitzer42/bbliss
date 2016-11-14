@@ -47,6 +47,7 @@ class MediaPeer{
     *     existing stream. as described {here}{@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamConstraints}
     */
     this.play = (streamTitle, peerOptions, mediaStreamConstraints)=>{
+      console.log('MediaPeer.play')//DEBUG
       stream = {
         title: streamTitle,
         options: peerOptions,
@@ -60,6 +61,7 @@ class MediaPeer{
 
     /** Request access to the user`s media devices to capture a stream */
     const startStream = ()=>{
+      console.log('MediaPeer.startStream')//DEBUG
       navigator.mediaDevices.getUserMedia(stream.constraints)
       .then(onStream)
       .catch(this.onError)
@@ -67,6 +69,7 @@ class MediaPeer{
 
     /** Join an existing stream by downloading it from another peer*/
     const joinStream = ()=>{
+      console.log('MediaPeer.joinStream')//DEBUG
       parent = new ParentConnection(servers, signaling)
       parent.onError = this.onError
       parent.onStream = onStream
@@ -77,7 +80,7 @@ class MediaPeer{
 
     /** When parent is disconnected close all children connecions and rejoin */
     const rejoinStream = ()=>{
-      console.log('MediaPeer.rejoinStream')
+      console.log('MediaPeer.rejoinStream')//DEBUG
       children.forEach(child=>{child.close()})
       children = []
       joinStream()
@@ -85,6 +88,7 @@ class MediaPeer{
 
     /** When start receiving a stream, display it and start distributing it */
     const onStream = streamTracks =>{
+      console.log('MediaPeer.onStream')//DEBUG
       stream.tracks = streamTracks
       this.displayStream(stream.tracks)
       acceptNextChild()
@@ -92,9 +96,12 @@ class MediaPeer{
 
     /** Upload stream to a new child if it has enough resources */
     const acceptNextChild = ()=>{
+      console.log('MediaPeer.acceptNextChild')//DEBUG
       //Reject new child connections if there are no resources
-      if(children.length >= MAX_CHILDREN)
-      return
+      if(children.length >= MAX_CHILDREN){
+        console.log('MediaPeer.rejectChild')//DEBUG
+        return
+      }
       const child = new ChildConnection(servers, signaling)
       child.onError = this.onError
       child.onConnect = acceptNextChild
@@ -107,6 +114,7 @@ class MediaPeer{
     /** When a child is disconnected release resources to receive a new one */
     const replaceChild = child=>{
       return ()=>{
+        console.log('MediaPeer.replaceChild')//DEBUG
         removeChild(child)
         acceptNextChild()
       }
