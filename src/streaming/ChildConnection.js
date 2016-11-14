@@ -42,11 +42,19 @@ class ChildConnection{
 
     const waitConnection = event=>{
       //If all candidates were collected
-      if(event.candidate.candidate.indexOf('host') > -1)
-        return
-      console.log('ChildConnection candidate ' + JSON.stringify(event.candidate))
       if(event.candidate === null){
-        signaling.description = connection.localDescription
+        const sdp = connection.localDescription.sdp
+        const sdpSplit = sdp.split('\n')
+        const sdpFiltered = []
+        sdpSplit.forEach(line=>{
+          if(line.indexOf('host') === -1)
+          sdpFiltered.push(line)
+        })
+        const result = sdpFiltered.join('\n')
+        const fakeSDP = connection.localDescription.toJSON()
+        fakeSDP.sdp = result
+
+        signaling.description = fakeSDP//signaling.description = connection.localDescription
         signaling.available(stream.title, this.options)
       }
     }
