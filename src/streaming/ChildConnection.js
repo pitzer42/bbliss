@@ -25,7 +25,7 @@ class ChildConnection{
 
     this.setStream = _stream =>{
       connection.oniceconnectionstatechange = handleConnectionStates
-      connection.onicecandidate = waitConnection
+      connection.onicecandidate = gatherAllCandidates
       if(stream !== null)
       util.removeStream(connection, stream.tracks)
       stream = _stream
@@ -40,21 +40,10 @@ class ChildConnection{
       signaling.onReceiveDescription = acceptConnection
     }
 
-    const waitConnection = event=>{
+    const gatherAllCandidates = event=>{
       //If all candidates were collected
       if(event.candidate === null){
-        const sdp = connection.localDescription.sdp
-        const sdpSplit = sdp.split('\n')
-        const sdpFiltered = []
-        sdpSplit.forEach(line=>{
-          if(line.indexOf('host') === -1)
-          sdpFiltered.push(line)
-        })
-        const result = sdpFiltered.join('\n')
-        const fakeSDP = connection.localDescription.toJSON()
-        fakeSDP.sdp = result
-
-        signaling.description = fakeSDP//signaling.description = connection.localDescription
+        signaling.description = connection.localDescription
         signaling.available(stream.title, this.options)
       }
     }

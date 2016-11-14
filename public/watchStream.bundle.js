@@ -13263,7 +13263,7 @@
 
 	  this.setStream = function (_stream) {
 	    connection.oniceconnectionstatechange = handleConnectionStates;
-	    connection.onicecandidate = waitConnection;
+	    connection.onicecandidate = gatherAllCandidates;
 	    if (stream !== null) util.removeStream(connection, stream.tracks);
 	    stream = _stream;
 	    util.addStream(connection, stream.tracks);
@@ -13276,23 +13276,11 @@
 	    signaling.onReceiveDescription = acceptConnection;
 	  };
 
-	  var waitConnection = function waitConnection(event) {
+	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    //If all candidates were collected
 	    if (event.candidate === null) {
-	      (function () {
-	        var sdp = connection.localDescription.sdp;
-	        var sdpSplit = sdp.split('\n');
-	        var sdpFiltered = [];
-	        sdpSplit.forEach(function (line) {
-	          if (line.indexOf('host') === -1) sdpFiltered.push(line);
-	        });
-	        var result = sdpFiltered.join('\n');
-	        var fakeSDP = connection.localDescription.toJSON();
-	        fakeSDP.sdp = result;
-
-	        signaling.description = fakeSDP; //signaling.description = connection.localDescription
-	        signaling.available(stream.title, _this.options);
-	      })();
+	      signaling.description = connection.localDescription;
+	      signaling.available(stream.title, _this.options);
 	    }
 	  };
 
@@ -13322,12 +13310,19 @@
 /* 20 */
 /***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 
 	module.exports = {
-	  'iceServers': [{
-	    'urls': ['stun:stun.l.google.com:19302']
-	  }]
+	  "rtcpMuxPolicy": "require",
+	  "bundlePolicy": "max-bundle",
+	  "iceServers": [{
+	    "urls": ["turn:74.125.134.127:19305?transport=udp", "turn:[2607:F8B0:400C:C00::7F]:19305?transport=udp", "turn:74.125.134.127:443?transport=tcp", "turn:[2607:F8B0:400C:C00::7F]:443?transport=tcp"],
+	    "username": "CMCmrMEFEgatrPmq4N4Yzc/s6OMT",
+	    "credential": "mNoNrLjcYi5Lf4rHxeqiCf+/hvw="
+	  }, {
+	    "urls": ["stun:stun.l.google.com:19302"]
+	  }],
+	  "certificates": [{}]
 	};
 	/*
 	'stun:stun01.sipphone.com',
