@@ -6,7 +6,7 @@ const NODE_ID_OFFSET = 0
 const NODE_ID_LENGTH = 5
 
 function addToClients(socket){
-  const id = socket.id.slice(NODE_ID_OFFSET, socket.id.length)
+  const id = socket.client.id.slice(NODE_ID_OFFSET, socket.client.id.length)
   clients[id] = socket
 }
 
@@ -89,7 +89,7 @@ function onDisconnect(socket){
 }
 
 function hookClient(socket){
-  addToClients(socket)
+  addToClients(socket.client)
   socket.on('available', onAvailable)
   socket.on('request_description', onRequestDescription)
   socket.on('send_description', onSendDescription)
