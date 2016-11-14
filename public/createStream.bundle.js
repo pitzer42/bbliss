@@ -10239,7 +10239,7 @@
 
 	var SignalingChannel = __webpack_require__(6);
 	var ParentConnection = __webpack_require__(7);
-	var ChildConnection = __webpack_require__(22);
+	var ChildConnection = __webpack_require__(19);
 
 	/**
 	* Returns a maximun children value based on empirical observation considering
@@ -13240,10 +13240,7 @@
 	exports.ConnectionState = ConnectionState;
 
 /***/ },
-/* 19 */,
-/* 20 */,
-/* 21 */,
-/* 22 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
