@@ -50,10 +50,10 @@
 	var $ = __webpack_require__(2);
 	var localizer = __webpack_require__(1);
 	var titleInput = $('input[name=title]');
-	var MediaPeer = __webpack_require__(4);
+	var MediaPeer = __webpack_require__(5);
 	var socket = io();
 
-	var servers = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"../iceServers\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	var servers = __webpack_require__(4);
 
 	socket.on('connect', function () {
 	  var peer = new MediaPeer(servers, socket);
@@ -10198,19 +10198,109 @@
 
 /***/ },
 /* 4 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = {
+	  "iceServers": [{
+	    "urls": "stun:turn02.uswest.xirsys.com"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turn:turn02.uswest.xirsys.com:80?transport=udp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turn:turn02.uswest.xirsys.com:3478?transport=udp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turn:turn02.uswest.xirsys.com:80?transport=tcp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turn:turn02.uswest.xirsys.com:3478?transport=tcp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turns:turn02.uswest.xirsys.com:443?transport=tcp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }, {
+	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	    "urls": "turns:turn02.uswest.xirsys.com:5349?transport=tcp",
+	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	  }]
+	};
+	/*
+
+	var iceServers = [];
+
+	iceServers.push({
+	url: 'stun:stun.l.google.com:19302'
+	});
+
+	iceServers.push({
+	url: 'stun:stun.anyfirewall.com:3478'
+	});
+
+	iceServers.push({
+	url: 'turn:turn.bistri.com:80',
+	credential: 'homeo',
+	username: 'homeo'
+	});
+
+	iceServers.push({
+	url: 'turn:turn.anyfirewall.com:443?transport=tcp',
+	credential: 'webrtc',
+	username: 'webrtc'
+	});
+
+	module.exports = {
+	iceServers: iceServers,
+	iceTransports: 'all'
+	};
+	*/
+
+	/*
+	module.exports = {
+	"rtcpMuxPolicy": "require",
+	"bundlePolicy": "max-bundle",
+	"iceServers": [{
+	"urls": ["turn:74.125.134.127:19305?transport=udp", "turn:[2607:F8B0:400C:C00::7F]:19305?transport=udp", "turn:74.125.134.127:443?transport=tcp", "turn:[2607:F8B0:400C:C00::7F]:443?transport=tcp"],
+	"username": "CMCmrMEFEgatrPmq4N4Yzc/s6OMT",
+	"credential": "mNoNrLjcYi5Lf4rHxeqiCf+/hvw="
+	}, {
+	"urls": ["stun:stun.l.google.com:19302"]
+	}],
+	"iceTransports": "all"
+	}
+	*/
+
+	/*
+	'stun:stun01.sipphone.com',
+	'stun:stun.ekiga.net',
+	'stun:stunserver.org',
+	'stun:stun4.l.google.com:19302',
+	'stun:stun3.l.google.com:19302',
+	'stun:stun2.l.google.com:19302',
+	'stun:stun1.l.google.com:19302'
+	*/
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _classCallCheck2 = __webpack_require__(5);
+	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var SignalingChannel = __webpack_require__(6);
-	var ParentConnection = __webpack_require__(7);
-	var ChildConnection = __webpack_require__(19);
+	var SignalingChannel = __webpack_require__(7);
+	var ParentConnection = __webpack_require__(8);
+	var ChildConnection = __webpack_require__(20);
 
 	/**
 	* Returns a maximun children value based on empirical observation considering
@@ -10344,7 +10434,7 @@
 	module.exports = MediaPeer;
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -10358,7 +10448,7 @@
 	};
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -10368,7 +10458,7 @@
 	* messages in a offer/answer model and notify tracker of availability
 	*/
 
-	var _classCallCheck2 = __webpack_require__(5);
+	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
@@ -10456,19 +10546,19 @@
 	module.exports = SignalingChannel;
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _classCallCheck2 = __webpack_require__(5);
+	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(8);
-	var util = __webpack_require__(18);
+	__webpack_require__(9);
+	var util = __webpack_require__(19);
 
 	/** Downloads a stream from a peer */
 
@@ -10518,7 +10608,7 @@
 	module.exports = ParentConnection;
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -10535,12 +10625,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(9).log;
-	  var browserDetails = __webpack_require__(9).browserDetails;
+	  var logging = __webpack_require__(10).log;
+	  var browserDetails = __webpack_require__(10).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(9).extractVersion;
-	  module.exports.disableLog = __webpack_require__(9).disableLog;
+	  module.exports.extractVersion = __webpack_require__(10).extractVersion;
+	  module.exports.disableLog = __webpack_require__(10).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10549,10 +10639,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(10) || null;
-	  var edgeShim = __webpack_require__(12) || null;
-	  var firefoxShim = __webpack_require__(15) || null;
-	  var safariShim = __webpack_require__(17) || null;
+	  var chromeShim = __webpack_require__(11) || null;
+	  var edgeShim = __webpack_require__(13) || null;
+	  var firefoxShim = __webpack_require__(16) || null;
+	  var safariShim = __webpack_require__(18) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10616,7 +10706,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	/*
@@ -10753,7 +10843,7 @@
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10766,8 +10856,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(9).log;
-	var browserDetails = __webpack_require__(9).browserDetails;
+	var logging = __webpack_require__(10).log;
+	var browserDetails = __webpack_require__(10).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -11014,12 +11104,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(11)
+	  shimGetUserMedia: __webpack_require__(12)
 	};
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11031,7 +11121,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(9).log;
+	var logging = __webpack_require__(10).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -11214,7 +11304,7 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11227,8 +11317,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(13);
-	var browserDetails = __webpack_require__(9).browserDetails;
+	var SDPUtils = __webpack_require__(14);
+	var browserDetails = __webpack_require__(10).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12286,12 +12376,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(14)
+	  shimGetUserMedia: __webpack_require__(15)
 	};
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12788,7 +12878,7 @@
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	/*
@@ -12826,7 +12916,7 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12839,7 +12929,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(9).browserDetails;
+	var browserDetails = __webpack_require__(10).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -12982,12 +13072,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(16)
+	  shimGetUserMedia: __webpack_require__(17)
 	};
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -13000,8 +13090,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(9).log;
-	var browserDetails = __webpack_require__(9).browserDetails;
+	var logging = __webpack_require__(10).log;
+	var browserDetails = __webpack_require__(10).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -13143,7 +13233,7 @@
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports) {
 
 	/*
@@ -13177,7 +13267,7 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -13220,19 +13310,19 @@
 	exports.ConnectionState = ConnectionState;
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _classCallCheck2 = __webpack_require__(5);
+	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(8);
-	var util = __webpack_require__(18);
+	__webpack_require__(9);
+	var util = __webpack_require__(19);
 
 	/** Uploads a stream to a peer */
 
