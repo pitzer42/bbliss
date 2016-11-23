@@ -7,6 +7,7 @@ exports.insertStream = (title, location, root, onResult) =>{
   const newStream = {
     title: title.replace(' ', '_'),
     location: location,
+    root: root,
     peers: [root]
   }
   storage((db)=>{
@@ -23,6 +24,15 @@ exports.findStream = (title, onResult) => {
     const invokeOnResult = result=>{onResult(result[0])}
     const customLog = error=>{logError('fluxoServer.findStream: ' + error)}
     streams.findOne({title: title}).then(onResult).catch(customLog)
+    db.close()
+  }, logError)
+}
+
+exports.deleteStream = (root) =>{
+  storage(db=>{
+    const streams = db.collection('streams')
+    const customLog = error=>{logError('fluxoServer.deleteStream: ' + error)}
+    streams.deleteOne({root:root}).catch(customLog)
     db.close()
   }, logError)
 }

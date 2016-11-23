@@ -1,5 +1,7 @@
 'use strict'
 
+require('webrtc-adapter')
+
 const ConnectionState = {connected: 'connected', disconnected: 'failed'}
 
 function onaddstream(connection, f){

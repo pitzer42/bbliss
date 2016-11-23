@@ -10216,33 +10216,33 @@
 	};
 	/*
 	module.exports ={
-	  "iceServers": [{
-	    "urls": "stun:turn02.uswest.xirsys.com"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turn:turn02.uswest.xirsys.com:80?transport=udp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turn:turn02.uswest.xirsys.com:3478?transport=udp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turn:turn02.uswest.xirsys.com:80?transport=tcp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turn:turn02.uswest.xirsys.com:3478?transport=tcp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turns:turn02.uswest.xirsys.com:443?transport=tcp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }, {
-	    "username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
-	    "urls": "turns:turn02.uswest.xirsys.com:5349?transport=tcp",
-	    "credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
-	  }]
+	"iceServers": [{
+	"urls": "stun:turn02.uswest.xirsys.com"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turn:turn02.uswest.xirsys.com:80?transport=udp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turn:turn02.uswest.xirsys.com:3478?transport=udp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turn:turn02.uswest.xirsys.com:80?transport=tcp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turn:turn02.uswest.xirsys.com:3478?transport=tcp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turns:turn02.uswest.xirsys.com:443?transport=tcp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}, {
+	"username": "ff0f23a8-aa79-11e6-93e0-f7cc27a399ea",
+	"urls": "turns:turn02.uswest.xirsys.com:5349?transport=tcp",
+	"credential": "ff0f247a-aa79-11e6-8942-375dc0dce312"
+	}]
 	}
 	*/
 
@@ -10298,8 +10298,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var SignalingChannel = __webpack_require__(7);
-	var ParentConnection = __webpack_require__(8);
+	__webpack_require__(7);
+	var SignalingChannel = __webpack_require__(17);
+	var ParentConnection = __webpack_require__(18);
 	var ChildConnection = __webpack_require__(20);
 
 	/**
@@ -10451,166 +10452,6 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	/**
-	* Implements a text protocol over websocket that allow peers to exchange SDP
-	* messages in a offer/answer model and notify tracker of availability
-	*/
-
-	var _classCallCheck2 = __webpack_require__(6);
-
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var SignalingChannel = function SignalingChannel(socket) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, SignalingChannel);
-
-	  //public
-	  this.description = null;
-	  this.onReceiveDescription = Function.prototype;
-	  this.onRequestDescriptionTimeout = Function.prototype;
-	  //private
-	  var SEND_DESCRIPTION = 'send_description';
-	  var REQUEST_DESCRIPTION = 'request_description';
-	  var AVAILABLE = 'available';
-	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
-	  var gotDescription = false;
-
-	  /**
-	  * Sends a message to the tracker asking for a peer to send a description
-	  * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
-	  * this.onRequestDescriptionTimeout
-	  * @param {string} streamTitle - title of an existing stream
-	  */
-	  this.requestDescription = function (streamTitle) {
-	    gotDescription = false;
-	    console.log('-> REQUEST_DESCRIPTION'); //DEBUG
-	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
-	    var retry = function retry() {
-	      if (!gotDescription) {
-	        //console.log('retry REQUEST_DESCRIPTION')//DEBUG
-	        _this.onRequestDescriptionTimeout();
-	      }
-	    };
-	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
-	  };
-
-	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
-	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
-	    console.log('<- REQUEST_DESCRIPTION'); //DEBUG
-	    if (target === socket.id) {
-	      _this.sendDescription(origin, _this.description);
-	    }
-	  });
-
-	  /**
-	  * sends a message to the tracker asking for delivering a description to a
-	  * peer
-	  * @param {Integer} target - id of the target peer
-	  * @param {string} description - SDP message
-	  */
-	  this.sendDescription = function (target, description) {
-	    console.log('-> SEND_DESCRIPTION'); //DEBUG
-	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
-	  };
-
-	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
-	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
-	    console.log('<- SEND_DESCRIPTION'); //DEBUG
-	    gotDescription = true;
-	    if (target === socket.id) _this.onReceiveDescription(origin, description);
-	  });
-
-	  /**
-	  * Notifies tracker that this peer is available
-	  * @param {string} streamTitle - Title of the stream this peer is uploading
-	  * @param {dictionary} peerOptions - Options for helping the tracker to optimize
-	  *   peer selection @see:MediaPeer
-	  */
-	  this.available = function (streamTitle, peerOptions) {
-	    console.log('AVAILABLE');
-	    socket.emit(AVAILABLE, streamTitle, peerOptions, socket.id);
-	  };
-
-	  //DEBUG: used o build a debug tree on the tracker
-	  this.con = function (parent) {
-	    console.log(parent + ' -> ' + socket.id);
-	    socket.emit('con', parent, socket.id);
-	  };
-	};
-
-	module.exports = SignalingChannel;
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _classCallCheck2 = __webpack_require__(6);
-
-	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	__webpack_require__(9);
-	var util = __webpack_require__(19);
-
-	/** Downloads a stream from a peer */
-
-	var ParentConnection = function ParentConnection(servers, signaling) {
-	  var _this = this;
-
-	  (0, _classCallCheck3.default)(this, ParentConnection);
-
-	  //public
-	  this.parentId = null;
-	  this.onConnect = Function.prototype;
-	  this.onStream = Function.prototype;
-	  this.onDisconnect = Function.prototype;
-	  this.onError = Function.prototype;
-	  //private
-	  var connection = new RTCPeerConnection(servers);
-
-	  this.join = function (streamTitle) {
-	    util.onaddstream(connection, _this.onStream.bind(_this));
-	    connection.oniceconnectionstatechange = handleConnectionStates;
-	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
-	    signaling.onReceiveDescription = onReceiveDescription;
-	    signaling.requestDescription(streamTitle);
-	  };
-
-	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
-	    _this.parentId = parentId;
-	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    connection.setRemoteDescription(remoteDescription);
-	    connection.createAnswer(answerDescription, _this.onError);
-	  };
-
-	  var answerDescription = function answerDescription(localDescription) {
-	    connection.setLocalDescription(localDescription);
-	    signaling.sendDescription(_this.parentId, localDescription);
-	  };
-
-	  var handleConnectionStates = function handleConnectionStates() {
-	    var state = connection.iceConnectionState;
-	    if (state === util.ConnectionState.connected) _this.onConnect();else if (state === util.ConnectionState.disconnected) {
-	      _this.onDisconnect();
-	      connection.close();
-	    }
-	  };
-	};
-
-	module.exports = ParentConnection;
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*
 	 *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 	 *
@@ -10625,12 +10466,12 @@
 	// Shimming starts here.
 	(function() {
 	  // Utils.
-	  var logging = __webpack_require__(10).log;
-	  var browserDetails = __webpack_require__(10).browserDetails;
+	  var logging = __webpack_require__(8).log;
+	  var browserDetails = __webpack_require__(8).browserDetails;
 	  // Export to the adapter global object visible in the browser.
 	  module.exports.browserDetails = browserDetails;
-	  module.exports.extractVersion = __webpack_require__(10).extractVersion;
-	  module.exports.disableLog = __webpack_require__(10).disableLog;
+	  module.exports.extractVersion = __webpack_require__(8).extractVersion;
+	  module.exports.disableLog = __webpack_require__(8).disableLog;
 
 	  // Uncomment the line below if you want logging to occur, including logging
 	  // for the switch statement below. Can also be turned on in the browser via
@@ -10639,10 +10480,10 @@
 	  // require('./utils').disableLog(false);
 
 	  // Browser shims.
-	  var chromeShim = __webpack_require__(11) || null;
-	  var edgeShim = __webpack_require__(13) || null;
-	  var firefoxShim = __webpack_require__(16) || null;
-	  var safariShim = __webpack_require__(18) || null;
+	  var chromeShim = __webpack_require__(9) || null;
+	  var edgeShim = __webpack_require__(11) || null;
+	  var firefoxShim = __webpack_require__(14) || null;
+	  var safariShim = __webpack_require__(16) || null;
 
 	  // Shim browser if found.
 	  switch (browserDetails.browser) {
@@ -10706,7 +10547,7 @@
 
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/*
@@ -10843,7 +10684,7 @@
 
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10856,8 +10697,8 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(10).log;
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var logging = __webpack_require__(8).log;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var chromeShim = {
 	  shimMediaStream: function() {
@@ -11104,12 +10945,12 @@
 	  shimOnTrack: chromeShim.shimOnTrack,
 	  shimSourceObject: chromeShim.shimSourceObject,
 	  shimPeerConnection: chromeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(12)
+	  shimGetUserMedia: __webpack_require__(10)
 	};
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11121,7 +10962,7 @@
 	 */
 	 /* eslint-env node */
 	'use strict';
-	var logging = __webpack_require__(10).log;
+	var logging = __webpack_require__(8).log;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -11304,7 +11145,7 @@
 
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -11317,8 +11158,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var SDPUtils = __webpack_require__(14);
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var SDPUtils = __webpack_require__(12);
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var edgeShim = {
 	  shimPeerConnection: function() {
@@ -12376,12 +12217,12 @@
 	// Expose public methods.
 	module.exports = {
 	  shimPeerConnection: edgeShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(15)
+	  shimGetUserMedia: __webpack_require__(13)
 	};
 
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports) {
 
 	 /* eslint-env node */
@@ -12878,7 +12719,7 @@
 
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports) {
 
 	/*
@@ -12916,7 +12757,7 @@
 
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -12929,7 +12770,7 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	var firefoxShim = {
 	  shimOnTrack: function() {
@@ -13072,12 +12913,12 @@
 	  shimOnTrack: firefoxShim.shimOnTrack,
 	  shimSourceObject: firefoxShim.shimSourceObject,
 	  shimPeerConnection: firefoxShim.shimPeerConnection,
-	  shimGetUserMedia: __webpack_require__(17)
+	  shimGetUserMedia: __webpack_require__(15)
 	};
 
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -13090,8 +12931,8 @@
 	 /* eslint-env node */
 	'use strict';
 
-	var logging = __webpack_require__(10).log;
-	var browserDetails = __webpack_require__(10).browserDetails;
+	var logging = __webpack_require__(8).log;
+	var browserDetails = __webpack_require__(8).browserDetails;
 
 	// Expose public methods.
 	module.exports = function() {
@@ -13233,7 +13074,7 @@
 
 
 /***/ },
-/* 18 */
+/* 16 */
 /***/ function(module, exports) {
 
 	/*
@@ -13267,10 +13108,172 @@
 
 
 /***/ },
-/* 19 */
-/***/ function(module, exports) {
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	/**
+	* Implements a text protocol over websocket that allow peers to exchange SDP
+	* messages in a offer/answer model and notify tracker of availability
+	*/
+
+	var _classCallCheck2 = __webpack_require__(6);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SignalingChannel = function SignalingChannel(socket) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, SignalingChannel);
+
+	  //public
+	  this.description = null;
+	  this.onReceiveDescription = Function.prototype;
+	  this.onRequestDescriptionTimeout = Function.prototype;
+	  //private
+	  var SEND_DESCRIPTION = 'send_description';
+	  var REQUEST_DESCRIPTION = 'request_description';
+	  var AVAILABLE = 'available';
+	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
+	  var gotDescription = false;
+
+	  /**
+	  * Sends a message to the tracker asking for a peer to send a description
+	  * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
+	  * this.onRequestDescriptionTimeout
+	  * @param {string} streamTitle - title of an existing stream
+	  */
+	  this.requestDescription = function (streamTitle) {
+	    gotDescription = false;
+	    console.log('-> REQUEST_DESCRIPTION'); //DEBUG
+	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
+	    var retry = function retry() {
+	      if (!gotDescription) {
+	        //console.log('retry REQUEST_DESCRIPTION')//DEBUG
+	        _this.onRequestDescriptionTimeout();
+	      }
+	    };
+	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
+	  };
+
+	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
+	  socket.on(REQUEST_DESCRIPTION, function (origin, target) {
+	    console.log('<- REQUEST_DESCRIPTION'); //DEBUG
+	    if (target === socket.id) {
+	      _this.sendDescription(origin, _this.description);
+	    }
+	  });
+
+	  /**
+	  * sends a message to the tracker asking for delivering a description to a
+	  * peer
+	  * @param {Integer} target - id of the target peer
+	  * @param {string} description - SDP message
+	  */
+	  this.sendDescription = function (target, description) {
+	    console.log('-> SEND_DESCRIPTION'); //DEBUG
+	    socket.emit(SEND_DESCRIPTION, socket.id, target, description);
+	  };
+
+	  /** Triggers onReceiveDescription when a SEND_DESCRIPTION arrives */
+	  socket.on(SEND_DESCRIPTION, function (origin, target, description) {
+	    console.log('<- SEND_DESCRIPTION'); //DEBUG
+	    gotDescription = true;
+	    if (target === socket.id) _this.onReceiveDescription(origin, description);
+	  });
+
+	  /**
+	  * Notifies tracker that this peer is available
+	  * @param {string} streamTitle - Title of the stream this peer is uploading
+	  * @param {dictionary} peerOptions - Options for helping the tracker to optimize
+	  *   peer selection @see:MediaPeer
+	  */
+	  this.available = function (streamTitle, peerOptions) {
+	    console.log('AVAILABLE');
+	    socket.emit(AVAILABLE, streamTitle, peerOptions, socket.id);
+	  };
+
+	  //DEBUG: used o build a debug tree on the tracker
+	  this.con = function (parent) {
+	    console.log(parent + ' -> ' + socket.id);
+	    socket.emit('con', parent, socket.id);
+	  };
+	};
+
+	module.exports = SignalingChannel;
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _classCallCheck2 = __webpack_require__(6);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	__webpack_require__(7);
+	var util = __webpack_require__(19);
+
+	/** Downloads a stream from a peer */
+
+	var ParentConnection = function ParentConnection(servers, signaling) {
+	  var _this = this;
+
+	  (0, _classCallCheck3.default)(this, ParentConnection);
+
+	  //public
+	  this.parentId = null;
+	  this.onConnect = Function.prototype;
+	  this.onStream = Function.prototype;
+	  this.onDisconnect = Function.prototype;
+	  this.onError = Function.prototype;
+	  //private
+	  var connection = new RTCPeerConnection(servers);
+
+	  this.join = function (streamTitle) {
+	    util.onaddstream(connection, _this.onStream.bind(_this));
+	    connection.oniceconnectionstatechange = handleConnectionStates;
+	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
+	    signaling.onReceiveDescription = onReceiveDescription;
+	    signaling.requestDescription(streamTitle);
+	  };
+
+	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
+	    _this.parentId = parentId;
+	    remoteDescription = new RTCSessionDescription(remoteDescription);
+	    connection.setRemoteDescription(remoteDescription);
+	    connection.createAnswer(answerDescription, _this.onError);
+	  };
+
+	  var answerDescription = function answerDescription(localDescription) {
+	    connection.setLocalDescription(localDescription);
+	    signaling.sendDescription(_this.parentId, localDescription);
+	  };
+
+	  var handleConnectionStates = function handleConnectionStates() {
+	    var state = connection.iceConnectionState;
+	    if (state === util.ConnectionState.connected) _this.onConnect();else if (state === util.ConnectionState.disconnected) {
+	      _this.onDisconnect();
+	      connection.close();
+	    }
+	  };
+	};
+
+	module.exports = ParentConnection;
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	__webpack_require__(7);
 
 	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
 
@@ -13321,7 +13324,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(9);
+	__webpack_require__(7);
 	var util = __webpack_require__(19);
 
 	/** Uploads a stream to a peer */

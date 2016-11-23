@@ -1,5 +1,6 @@
 'use strict'
 
+require('webrtc-adapter')
 const SignalingChannel = require('./SignalingChannel')
 const ParentConnection = require('./ParentConnection')
 const ChildConnection = require('./ChildConnection')

@@ -81,6 +81,7 @@ function onSendDescription(origin, target, description){
 function onDisconnect(socket){
   return ()=>{
     removeFromTree(socket.id)
+    fluxo.deleteStream(socket.id)
   }
 }
 
