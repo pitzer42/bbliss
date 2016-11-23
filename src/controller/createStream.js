@@ -26,7 +26,8 @@ function createStream(){
       const source = new MediaPeer(servers, socket)
       source.displayStream = display
       source.onError = error =>{
-        console.log('MediaPeer error: ' + error)
+        alert('MediaPeer error: ' + error)
+        //console.log('MediaPeer error: ' + error)
       }
       source.play(title, location, mediaConstraints)
       streamingUI()

@@ -9,7 +9,10 @@ const servers = require('../iceServers')
 
 socket.on('connect', ()=>{
   const peer = new MediaPeer(servers, socket)
-  peer.onError = error=>{console.log(error)}
+  peer.onError = error=>{
+    alert(error)
+    //console.log(error)
+  }
   peer.displayStream = display
   localizer(location=>{
     const title = titleInput.val()
