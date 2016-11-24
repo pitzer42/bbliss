@@ -14890,7 +14890,7 @@
 
 	  var acceptConnection = function acceptConnection(childId, remoteDescription) {
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    connection.setRemoteDescription(remoteDescription);
+	    connection.setRemoteDescription(remoteDescription).catch(_this.listen.bind(_this));
 	  };
 
 	  var handleConnectionStates = function handleConnectionStates() {

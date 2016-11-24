@@ -50,7 +50,7 @@ class ChildConnection{
 
     const acceptConnection = (childId, remoteDescription) =>{
       remoteDescription = new RTCSessionDescription(remoteDescription)
-      connection.setRemoteDescription(remoteDescription)
+      connection.setRemoteDescription(remoteDescription).catch(this.listen.bind(this))
     }
 
     const handleConnectionStates = ()=>{
