@@ -2,10 +2,6 @@ module.exports = {
 	"rtcpMuxPolicy": "require",
 	"bundlePolicy": "max-bundle",
 	"iceServers": [{
-		"urls": ["turn:64.233.186.127:19305?transport=udp", "turn:[2800:3F0:4003:C00::7F]:19305?transport=udp", "turn:64.233.186.127:443?transport=tcp", "turn:[2800:3F0:4003:C00::7F]:443?transport=tcp"],
-		"username": "CObd3cEFEgatd64128cYzc/s6OMT",
-		"credential": "MMoEMxujYU22EiQBype3blcg6Tg="
-	}, {
 		"urls": ["stun:stun.l.google.com:19302"]
 	}],
 	"certificates": [{}]
