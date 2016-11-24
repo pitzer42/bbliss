@@ -15,7 +15,7 @@ class SignalingChannel{
     const SEND_DESCRIPTION = 'send_description'
     const REQUEST_DESCRIPTION = 'request_description'
     const AVAILABLE = 'available'
-    const REQUEST_DESCRIPTION_TIMEOUT = 5000
+    const REQUEST_DESCRIPTION_TIMEOUT = 20000
     let gotDescription = false
 
     /**
