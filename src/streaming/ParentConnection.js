@@ -34,6 +34,7 @@ class ParentConnection {
     const answerDescription = localDescription =>{
       connection.setLocalDescription(localDescription)
       signaling.sendDescription(this.parentId, connection.localDescription)
+      console.log('**************\n' + connection.localDescription)
     }
 
     const handleConnectionStates = ()=>{
