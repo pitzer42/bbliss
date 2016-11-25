@@ -13133,7 +13133,7 @@
 	  var SEND_DESCRIPTION = 'send_description';
 	  var REQUEST_DESCRIPTION = 'request_description';
 	  var AVAILABLE = 'available';
-	  var REQUEST_DESCRIPTION_TIMEOUT = 5000;
+	  var REQUEST_DESCRIPTION_TIMEOUT = 20000;
 	  var gotDescription = false;
 
 	  /**
@@ -13249,7 +13249,8 @@
 
 	  var answerDescription = function answerDescription(localDescription) {
 	    connection.setLocalDescription(localDescription);
-	    signaling.sendDescription(_this.parentId, localDescription);
+	    signaling.sendDescription(_this.parentId, connection.localDescription);
+	    console.log('**************\n' + connection.localDescription);
 	  };
 
 	  var handleConnectionStates = function handleConnectionStates() {
@@ -14861,7 +14862,7 @@
 
 	  var acceptConnection = function acceptConnection(childId, remoteDescription) {
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    connection.setRemoteDescription(remoteDescription).catch(_this.listen.bind(_this));
+	    connection.setRemoteDescription(remoteDescription); //.catch(this.listen.bind(this))
 	  };
 
 	  var handleConnectionStates = function handleConnectionStates() {
