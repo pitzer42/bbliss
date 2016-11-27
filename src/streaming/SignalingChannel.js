@@ -18,6 +18,7 @@ class SignalingChannel{
     const REQUEST_DESCRIPTION_TIMEOUT = 20000
     let gotDescription = false
 
+
     /**
     * Sends a message to the tracker asking for a peer to send a description
     * of a given stream. After REQUEST_DESCRIPTION_TIMEOUT miliseconds calls
