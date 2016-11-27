@@ -13413,11 +13413,10 @@
 	    socket.emit(REQUEST_DESCRIPTION, socket.id, streamTitle);
 	    var retry = function retry() {
 	      if (!gotDescription) {
-	        //console.log('retry REQUEST_DESCRIPTION')//DEBUG
 	        _this.onRequestDescriptionTimeout();
 	      }
 	    };
-	    setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT);
+	    //setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT)
 	  };
 
 	  /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
