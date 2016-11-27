@@ -40,7 +40,7 @@ class SignalingChannel{
     /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
     socket.on(REQUEST_DESCRIPTION, (origin, target) =>{
       console.log('<- REQUEST_DESCRIPTION')//DEBUG
-      if(target === socket.id){
+      if(target === socket.id && this.description){
         this.sendDescription(origin, this.description)
       }
     })

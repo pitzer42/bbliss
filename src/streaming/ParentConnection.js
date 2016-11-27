@@ -28,19 +28,19 @@ class ParentConnection {
       this.parentId = parentId
       remoteDescription = new RTCSessionDescription(remoteDescription)
       connection.setRemoteDescription(remoteDescription)
-      connection.createAnswer(answerDescription, this.onError)
+      connection.createAnswer().then(answerDescription).catch(this.onError)
     }
 
     const answerDescription = localDescription =>{
-      connection.setLocalDescription(localDescription)
-      signaling.sendDescription(this.parentId, connection.localDescription)
-      console.log('**************\n' + connection.localDescription)
+      connection.setLocalDescription(localDescription).then(()=>{
+        signaling.sendDescription(this.parentId, connection.localDescription)
+      }).catch(this.onError)
     }
 
     const handleConnectionStates = ()=>{
       const state = connection.iceConnectionState
       if(state === util.ConnectionState.connected)
-        this.onConnect()
+      this.onConnect()
       else if(state === util.ConnectionState.disconnected){
         this.onDisconnect()
         connection.close()

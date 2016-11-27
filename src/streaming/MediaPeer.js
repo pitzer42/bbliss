@@ -68,6 +68,14 @@ class MediaPeer{
       .catch(this.onError)
     }
 
+    /** When start receiving a stream, display it and start distributing it */
+    const onStream = tracks =>{
+      console.log('MediaPeer.onStream')//DEBUG
+      stream.tracks = tracks
+      this.displayStream(tracks)
+      acceptNextChild()
+    }
+
     /** Join an existing stream by downloading it from another peer*/
     const joinStream = ()=>{
       console.log('MediaPeer.joinStream')//DEBUG
@@ -87,13 +95,6 @@ class MediaPeer{
       joinStream()
     }
 
-    /** When start receiving a stream, display it and start distributing it */
-    const onStream = streamTracks =>{
-      console.log('MediaPeer.onStream')//DEBUG
-      stream.tracks = streamTracks
-      this.displayStream(stream.tracks)
-      acceptNextChild()
-    }
 
     /** Upload stream to a new child if it has enough resources */
     const acceptNextChild = ()=>{
@@ -104,9 +105,9 @@ class MediaPeer{
         return
       }
       const child = new ChildConnection(servers, signaling)
-      child.onError = this.onError
       child.onConnect = acceptNextChild
       child.onDisconnect = replaceChild(child)
+      child.onError = this.onError
       child.setStream(stream)
       child.listen()
       children.push(child)

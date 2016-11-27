@@ -14,7 +14,7 @@ class ChildConnection{
     this.onDisconnect = Function.prototype
     this.onError = Function.prototype
     //private
-    const connection = new RTCPeerConnection(servers)
+    let connection = new RTCPeerConnection(servers)
     let stream = null
     let state = null
     let connected = false
@@ -36,8 +36,8 @@ class ChildConnection{
       if(state === util.ConnectionState.connected)
       return
       const setLocalDescription = connection.setLocalDescription.bind(connection)
-      connection.createOffer(setLocalDescription, this.onError)
       signaling.onReceiveDescription = acceptConnection
+      connection.createOffer().then(setLocalDescription).catch(this.onError)
     }
 
     const gatherAllCandidates = event=>{
@@ -50,7 +50,7 @@ class ChildConnection{
 
     const acceptConnection = (childId, remoteDescription) =>{
       remoteDescription = new RTCSessionDescription(remoteDescription)
-      connection.setRemoteDescription(remoteDescription)//.catch(this.listen.bind(this))
+      connection.setRemoteDescription(remoteDescription).catch(this.onError)
     }
 
     const handleConnectionStates = ()=>{

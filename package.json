@@ -26,7 +26,7 @@
     "request": "^2.75.0",
     "socket.io": "^1.5.1",
     "webpack": "^1.13.2",
-    "webrtc-adapter": "^2.0.3"
+    "webrtc-adapter": "^2.0.8"
   },
   "devDependencies": {
     "jasmine-node": "^1.14.5",
