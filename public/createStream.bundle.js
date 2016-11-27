@@ -10219,6 +10219,7 @@
 	'use strict';
 
 	function setStream(stream) {
+	  console.log('Display ' + stream);
 	  var streamURL = window.URL.createObjectURL(stream);
 	  var video = document.querySelector('video');
 	  video.src = streamURL;
@@ -10232,13 +10233,14 @@
 
 	"use strict";
 
-	module.exports = {
-		"rtcpMuxPolicy": "require",
-		"bundlePolicy": "max-bundle",
-		"iceServers": [{
-			"urls": ["stun:stun.l.google.com:19302"]
-		}]
-	};
+	module.exports = null; /*{
+	                       "rtcpMuxPolicy": "require",
+	                       "bundlePolicy": "max-bundle",
+	                       "iceServers": [{
+	                       "urls": ["stun:stun.l.google.com:19302"]
+	                       }]
+	                       }*/
+
 	/*
 	module.exports ={
 	"iceServers": [{
@@ -13310,25 +13312,31 @@
 	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
 
 	function onaddstream(connection, f) {
-	  try {
-	    if (connection.onaddtrack) connection.ontrack = connection.onaddtrack;
-	    connection.ontrack = function (event) {
-	      f(event.streams[0]);
-	    };
-	  } catch (e) {
-	    connection.onaddstream = function (event) {
-	      f(event.stream);
-	    };
+	  connection.ontrack = function (event) {
+	    f(event.streams[0]);
+	  };
+	  /*
+	  try{
+	  if(connection.onaddtrack)
+	  connection.ontrack = connection.onaddtrack
+	  connection.ontrack = event=>{ f(event.streams[0]) }
+	  }catch(e){
+	  connection.onaddstream = event=>{ f(event.stream)}
 	  }
+	  */
 	}
 
 	function addStream(connection, stream) {
-	  try {
-	    var track = stream.getVideoTracks()[0];
-	    connection.sender = connection.addTrack(track, stream);
-	  } catch (e) {
-	    connection.addStream(stream);
+	  var track = stream.getTracks()[0];
+	  connection.sender = connection.addTrack(track, stream);
+	  /*
+	  try{
+	  const track = stream.getTracks()[0]
+	  connection.sender = connection.addTrack(track, stream)
+	  }catch(e){
+	  connection.addStream(stream)
 	  }
+	  */
 	}
 
 	function removeStream(connection, stream) {

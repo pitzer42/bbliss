@@ -1,10 +1,11 @@
-module.exports = {
+module.exports = null /*{
 	"rtcpMuxPolicy": "require",
 	"bundlePolicy": "max-bundle",
 	"iceServers": [{
 		"urls": ["stun:stun.l.google.com:19302"]
 	}]
-}
+}*/
+
 /*
 module.exports ={
 "iceServers": [{
