@@ -17,7 +17,7 @@ class ParentConnection {
     const connection = new RTCPeerConnection(servers)
 
     this.join = (streamTitle)=>{
-      util.onaddstream(connection, this.onStream.bind(this))
+      util.onAddStream(connection, this.onStream.bind(this))
       connection.oniceconnectionstatechange = handleConnectionStates
       signaling.onRequestDescriptionTimeout = this.join.bind(this, streamTitle)
       signaling.onReceiveDescription = onReceiveDescription

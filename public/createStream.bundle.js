@@ -10367,6 +10367,7 @@
 	function setStream(stream) {
 	  var video = document.querySelector('video');
 	  video.srcObject = stream;
+	  window.stream = stream;
 	}
 
 	module.exports = setStream;
@@ -13497,7 +13498,7 @@
 	  var connection = new RTCPeerConnection(servers);
 
 	  this.join = function (streamTitle) {
-	    util.onaddstream(connection, _this.onStream.bind(_this));
+	    util.onAddStream(connection, _this.onStream.bind(_this));
 	    connection.oniceconnectionstatechange = handleConnectionStates;
 	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
 	    signaling.onReceiveDescription = onReceiveDescription;
@@ -13544,7 +13545,7 @@
 
 	var ConnectionState = { connected: 'connected', disconnected: 'failed' };
 
-	function onaddstream(connection, f) {
+	function onAddStream(connection, f) {
 	  connection.ontrack = function (event) {
 	    f(event.streams[0]);
 	  };

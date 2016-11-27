@@ -4,7 +4,7 @@ require('webrtc-adapter')
 
 const ConnectionState = {connected: 'connected', disconnected: 'failed'}
 
-function onaddstream(connection, f){
+function onAddStream(connection, f){
   connection.ontrack = event=>{f(event.streams[0])}
   /*
   try{
