@@ -65,7 +65,7 @@ function getStats(pc, selector) {
   });
 }
 
-exports.onaddstream = onaddstream
+exports.onAddStream = onAddStream
 exports.addStream = addStream
 exports.removeStream = removeStream
 exports.ConnectionState = ConnectionState
