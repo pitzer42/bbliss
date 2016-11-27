@@ -18,8 +18,13 @@ connection.onaddstream = event=>{ f(event.stream)}
 }
 
 function addStream(connection, stream){
-  const track = stream.getTracks()[0]
-  connection.sender = connection.addTrack(track, stream)
+  if(connection.addTrack){
+    const track = stream.getTracks()[0]
+    connection.sender = connection.addTrack(track, stream)
+  }
+  else {
+    connection.addStream(stream)
+  }
   /*
   try{
   const track = stream.getTracks()[0]
