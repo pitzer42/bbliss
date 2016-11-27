@@ -33,7 +33,7 @@ class SignalingChannel{
           this.onRequestDescriptionTimeout()
         }
       }
-      //setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT)
+      setTimeout(retry, REQUEST_DESCRIPTION_TIMEOUT)
     }
 
     /** Answers REQUEST_DESCRIPTION with SEND_DESCRIPTION */
