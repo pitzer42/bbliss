@@ -10380,7 +10380,7 @@
 
 	module.exports = {
 		"rtcpMuxPolicy": "require",
-		"bundlePolicy": "max-bundle",
+		//"bundlePolicy": "max-bundle",
 		"iceServers": [{
 			"urls": ["stun:stun.l.google.com:19302"]
 		}]
