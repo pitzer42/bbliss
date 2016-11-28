@@ -15145,8 +15145,17 @@
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    //If all candidates were collected
 	    if (event.candidate === null) {
-	      signaling.description = connection.localDescription;
-	      signaling.available(stream.title, _this.options);
+	      (function () {
+
+	        var filtered = [];
+	        var lines = connection.localDescription.sdp.split('\n').forEach(function (line) {
+	          if (line.indexOf('a') === -1 || line.indexOf('host') === -1) filtered.push(line);else console.log(line);
+	        });
+	        var desc = { sdp: filtered.join('\n'), type: connection.localDescription.type };
+
+	        signaling.description = desc; //connection.localDescription
+	        signaling.available(stream.title, _this.options);
+	      })();
 	    }
 	  };
 
