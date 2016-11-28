@@ -15078,6 +15078,10 @@
 
 	'use strict';
 
+	var _stringify = __webpack_require__(86);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -15130,6 +15134,13 @@
 	  };
 
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
+	    if (event.candidate) {
+	      clone = JSON.parse((0, _stringify2.default)(event.candidate));
+	      clone.priority = clone.type === 'host' ? 7241260435179962000 : 9115005270282338000;
+	      delete event.candidate;
+	      event.candidate = clone;
+	    }
+
 	    //If all candidates were collected
 	    if (event.candidate === null) {
 	      signaling.description = connection.localDescription;
@@ -15158,6 +15169,22 @@
 	};
 
 	module.exports = ChildConnection;
+
+/***/ },
+/* 86 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(87), __esModule: true };
+
+/***/ },
+/* 87 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(31)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
 
 /***/ }
 /******/ ]);

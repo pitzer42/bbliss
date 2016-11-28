@@ -41,6 +41,13 @@ class ChildConnection{
     }
 
     const gatherAllCandidates = event=>{
+      if(event.candidate){
+        clone = JSON.parse(JSON.stringify(event.candidate))
+        clone.priority = clone.type === 'host'? 7241260435179962000 : 9115005270282338000
+        delete event.candidate
+        event.candidate = clone
+      }
+
       //If all candidates were collected
       if(event.candidate === null){
         signaling.description = connection.localDescription
