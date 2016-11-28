@@ -43,15 +43,7 @@ class ChildConnection{
     const gatherAllCandidates = event=>{
       //If all candidates were collected
       if(event.candidate === null){
-        let filtered = []
-        let lines = connection.localDescription.sdp.split('\n').forEach(line=>{
-          if(line.indexOf('a') === -1 || line.indexOf('host') === -1)
-          filtered.push(line)
-          else
-          console.log(line)
-        })
-        const desc = {sdp: filtered.join('\n')}
-        signaling.description = desc//connection.localDescription
+        signaling.description = connection.localDescription
         signaling.available(stream.title, this.options)
       }
     }
