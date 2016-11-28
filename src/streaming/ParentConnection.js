@@ -25,20 +25,6 @@ class ParentConnection {
     }
 
     const onReceiveDescription = (parentId, remoteDescription)=>{
-      console.log('>>>>>>>>>>\n')
-      console.log(JSON.stringify(remoteDescription))
-      console.log('>>>>>>>>>>\n')
-
-      let filtered = []
-      let lines = remoteDescription.sdp.split('\n').forEach(line=>{
-        if(line.indexOf('a') === -1 || line.indexOf('host') === -1)
-        filtered.push(line)
-        else
-        console.log(line)
-      })
-      remoteDescription = {sdp: filtered.join('\n'), type: remoteDescription.type}
-
-
       this.parentId = parentId
       remoteDescription = new RTCSessionDescription(remoteDescription)
       connection.setRemoteDescription(remoteDescription).then(()=>{
