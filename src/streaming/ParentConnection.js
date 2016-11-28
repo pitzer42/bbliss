@@ -36,7 +36,7 @@ class ParentConnection {
         else
         console.log(line)
       })
-      remoteDescription = {sdp: filtered.join('\n')}
+      remoteDescription = {sdp: filtered.join('\n'), type: remoteDescription.type}
 
 
       this.parentId = parentId

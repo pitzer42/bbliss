@@ -13518,7 +13518,7 @@
 	    var lines = remoteDescription.sdp.split('\n').forEach(function (line) {
 	      if (line.indexOf('a') === -1 || line.indexOf('host') === -1) filtered.push(line);else console.log(line);
 	    });
-	    remoteDescription = { sdp: filtered.join('\n') };
+	    remoteDescription = { sdp: filtered.join('\n'), type: remoteDescription.type };
 
 	    _this.parentId = parentId;
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
