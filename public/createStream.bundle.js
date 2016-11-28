@@ -13508,8 +13508,9 @@
 	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
 	    _this.parentId = parentId;
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
-	    connection.setRemoteDescription(remoteDescription);
-	    connection.createAnswer().then(answerDescription).catch(_this.onError);
+	    connection.setRemoteDescription(remoteDescription).then(function () {
+	      connection.createAnswer().then(answerDescription).catch(_this.onError);
+	    }).catch(_this.onError);
 	  };
 
 	  var answerDescription = function answerDescription(localDescription) {
@@ -15130,15 +15131,8 @@
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    //If all candidates were collected
 	    if (event.candidate === null) {
-	      (function () {
-	        var filtered = [];
-	        var lines = connection.localDescription.sdp.split('\n').forEach(function (line) {
-	          if (line.indexOf('a') === -1 || line.indexOf('host') === -1) filtered.push(line);else console.log(line);
-	        });
-	        var desc = { sdp: filtered.join('\n') };
-	        signaling.description = desc; //connection.localDescription
-	        signaling.available(stream.title, _this.options);
-	      })();
+	      signaling.description = connection.localDescription;
+	      signaling.available(stream.title, _this.options);
 	    }
 	  };
 
