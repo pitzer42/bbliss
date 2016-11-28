@@ -15135,7 +15135,7 @@
 
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    if (event.candidate) {
-	      clone = JSON.parse((0, _stringify2.default)(event.candidate));
+	      var clone = JSON.parse((0, _stringify2.default)(event.candidate));
 	      clone.priority = clone.type === 'host' ? 7241260435179962000 : 9115005270282338000;
 	      delete event.candidate;
 	      event.candidate = clone;
