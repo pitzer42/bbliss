@@ -13472,6 +13472,10 @@
 
 	'use strict';
 
+	var _stringify = __webpack_require__(86);
+
+	var _stringify2 = _interopRequireDefault(_stringify);
+
 	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -13506,6 +13510,16 @@
 	  };
 
 	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
+	    console.log('>>>>>>>>>>\n');
+	    console.log((0, _stringify2.default)(remoteDescription));
+	    console.log('>>>>>>>>>>\n');
+
+	    var filtered = [];
+	    var lines = remoteDescription.sdp.split('\n').forEach(function (line) {
+	      if (line.indexOf('a') === -1 || line.indexOf('host') === -1) filtered.push(line);else console.log(line);
+	    });
+	    remoteDescription = { sdp: filtered.join('\n') };
+
 	    _this.parentId = parentId;
 	    remoteDescription = new RTCSessionDescription(remoteDescription);
 	    connection.setRemoteDescription(remoteDescription).then(function () {
@@ -15131,15 +15145,8 @@
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    //If all candidates were collected
 	    if (event.candidate === null) {
-	      (function () {
-	        var filtered = [];
-	        var lines = connection.localDescription.sdp.split('\n').forEach(function (line) {
-	          if (line.indexOf('a') === -1 || line.indexOf('host') === -1) filtered.push(line);else console.log(line);
-	        });
-	        var desc = { sdp: filtered.join('\n') };
-	        signaling.description = desc; //connection.localDescription
-	        signaling.available(stream.title, _this.options);
-	      })();
+	      signaling.description = connection.localDescription;
+	      signaling.available(stream.title, _this.options);
 	    }
 	  };
 
@@ -15164,6 +15171,22 @@
 	};
 
 	module.exports = ChildConnection;
+
+/***/ },
+/* 86 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(87), __esModule: true };
+
+/***/ },
+/* 87 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var core  = __webpack_require__(31)
+	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
+	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
+	};
 
 /***/ }
 /******/ ]);
