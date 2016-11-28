@@ -27,8 +27,9 @@ class ParentConnection {
     const onReceiveDescription = (parentId, remoteDescription)=>{
       this.parentId = parentId
       remoteDescription = new RTCSessionDescription(remoteDescription)
-      connection.setRemoteDescription(remoteDescription)
-      connection.createAnswer().then(answerDescription).catch(this.onError)
+      connection.setRemoteDescription(remoteDescription).then(()=>{
+        connection.createAnswer().then(answerDescription).catch(this.onError)
+      }).catch(this.onError)
     }
 
     const answerDescription = localDescription =>{
