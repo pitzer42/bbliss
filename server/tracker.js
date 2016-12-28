@@ -93,6 +93,7 @@ function hookClient(socket){
   socket.on('disconnect', onDisconnect(socket))
 
   socket.on('con', (parent, child)=>{
+    console.log(child)
     addToTree(parent, child)
   })
 }
