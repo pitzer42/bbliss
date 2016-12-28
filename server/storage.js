@@ -1,4 +1,5 @@
-const url = process.env.NODE_ENV === 'production'? 'mongodb://dev:dev123@ds033046.mlab.com:33046/bbliss' : 'mongodb://localhost:27017/bbliss'
+const url = process.env.NODE_ENV === 'production'? 'mongodb://dev:dev123@ds145128.mlab.com:45128/bbliss_db' : 'mongodb://localhost:27017/bbliss'
+
 const dbClient = require('mongodb').MongoClient
 
 module.exports = function(onSuccess, onError){
