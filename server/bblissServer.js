@@ -22,7 +22,7 @@ exports.findStream = (title, onResult) => {
   storage(db=>{
     const streams = db.collection('streams')
     const invokeOnResult = result=>{onResult(result[0])}
-    const customLog = error=>{logError('fluxoServer.findStream: ' + error)}
+    const customLog = error=>{logError('bblissServer.findStream: ' + error)}
     streams.findOne({title: title}).then(onResult).catch(customLog)
     db.close()
   }, logError)
@@ -31,7 +31,7 @@ exports.findStream = (title, onResult) => {
 exports.deleteStream = (root) =>{
   storage(db=>{
     const streams = db.collection('streams')
-    const customLog = error=>{logError('fluxoServer.deleteStream: ' + error)}
+    const customLog = error=>{logError('bblissServer.deleteStream: ' + error)}
     streams.deleteOne({root:root}).catch(customLog)
     db.close()
   }, logError)

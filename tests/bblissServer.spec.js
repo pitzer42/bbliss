@@ -1,6 +1,6 @@
 'use strict'
 
-const fluxo = require('../server/fluxoServer')
+const bbliss = require('../server/bblissServer')
 
 describe('Fluxo Server', ()=>{
   it('creates streams', done=>{
@@ -11,7 +11,7 @@ describe('Fluxo Server', ()=>{
       expect(stream._id).toBeDefined()
       done()
     }
-    fluxo.insertStream(title, location, root, expectStreamToBeInserted)
+    bbliss.insertStream(title, location, root, expectStreamToBeInserted)
   })
   it('gets a stream by name', done=>{
     const title = 'test'
@@ -19,7 +19,7 @@ describe('Fluxo Server', ()=>{
       expect(stream).toBeTruthy()
       done()
     }
-    fluxo.findStream(title, expectStreamNotToBeNull)
+    bbliss.findStream(title, expectStreamNotToBeNull)
   })
   it('adds peers to a stream', done=>{
     const title = 'test'
@@ -29,8 +29,8 @@ describe('Fluxo Server', ()=>{
       expect(peers.length).toBeGreaterThan(1)
       done()
     }
-    fluxo.addPeer(title, location, peerId)
-    fluxo.availablePeers(title, expectStreamToHaveMoreThanOnePeer)
+    bbliss.addPeer(title, location, peerId)
+    bbliss.availablePeers(title, expectStreamToHaveMoreThanOnePeer)
   })
   it('pops peers from a stream', done=>{
     const title = 'test'
@@ -44,8 +44,8 @@ describe('Fluxo Server', ()=>{
       expect(before).toBeGreaterThan(after)
       done()
     }
-    fluxo.availablePeers(title, getPeerCountBefore)
-    fluxo.popPeer(title)
-    fluxo.availablePeers(title, getPeerCountAfter)
+    bbliss.availablePeers(title, getPeerCountBefore)
+    bbliss.popPeer(title)
+    bbliss.availablePeers(title, getPeerCountAfter)
   })
 })

@@ -1,7 +1,7 @@
 {
-  "name": "fluxo",
+  "name": "bbliss",
   "version": "0.1.0",
-  "description": "P2P live streaming using WebRTC",
+  "description": "browser-to-browser live interactive streaming system",
   "main": "index.js",
   "scripts": {
     "start": "node server",

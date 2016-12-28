@@ -1,4 +1,4 @@
-const fluxo = require('./fluxoServer')
+const bbliss = require('./bblissServer')
 const dictodot = require('./dictodot')
 const clients = {}
 const tree = {}
@@ -45,21 +45,21 @@ function removeFromTree(node){
 }
 
 function onAvailable(title, options, origin){
-  fluxo.findStream(title, stream=>{
+  bbliss.findStream(title, stream=>{
     if(stream){
-      fluxo.addPeer(title, options, origin)
+      bbliss.addPeer(title, options, origin)
     }else{
-      fluxo.insertStream(title, options, origin)
+      bbliss.insertStream(title, options, origin)
     }
   })
 }
 
 function onRequestDescription(origin, title){
-  fluxo.findStream(title, stream =>{
+  bbliss.findStream(title, stream =>{
     const leafId = stream.peers[0]
     const leaf = clients[leafId]
     if(leaf){
-      fluxo.popPeer(title)
+      bbliss.popPeer(title)
       if(leafId === origin)
       return onRequestDescription(origin, title)
       else
@@ -81,7 +81,7 @@ function onSendDescription(origin, target, description){
 function onDisconnect(socket){
   return ()=>{
     removeFromTree(socket.id)
-    fluxo.deleteStream(socket.id)
+    bbliss.deleteStream(socket.id)
   }
 }
 

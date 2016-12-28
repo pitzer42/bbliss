@@ -1,9 +1,9 @@
 const router = require('express').Router()
 const path = require('path')
-const fluxo = require('./fluxoServer')
+const bbliss = require('./bblissServer')
 
 router.get('/', (request, response, next)=>{
-  fluxo.listStreams((results)=>{
+  bbliss.listStreams((results)=>{
     response.render('listStreams.pug', {streams: results})
   })
 })
@@ -14,7 +14,7 @@ router.get('/new', (request, response, next)=>{
 
 router.get('/:title', (request, response, next)=>{
   const title = request.params.title
-  fluxo.findStream(title,(stream)=>{
+  bbliss.findStream(title,(stream)=>{
     response.render('watchStream.pug', {title: title})
   })
 })

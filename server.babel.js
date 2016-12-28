@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({
 }))
 
 app.use('/', express.static('public'))
-app.use('/app', require('./server/fluxoAPP'))
+app.use('/app', require('./server/bblissApp'))
 
 app.set('view engine', 'pug')
 app.set('views', './views')

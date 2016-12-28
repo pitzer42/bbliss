@@ -10,7 +10,6 @@ const servers = require('../iceServers')
 socket.on('connect', ()=>{
   const peer = new MediaPeer(servers, socket)
   peer.onError = error=>{
-    //alert(error)
     console.log('MediaPeer Error: ' + error)
   }
   peer.displayStream = display
