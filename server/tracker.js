@@ -75,7 +75,7 @@ function onSendDescription(origin, target, description){
   if(leaf)
   leaf.emit('send_description', origin, target, description)
   else
-  console.log('leaf not found for ' + target +' ' +socket.id)
+  console.log('leaf not found for ' + target)
 }
 
 function onDisconnect(socket){

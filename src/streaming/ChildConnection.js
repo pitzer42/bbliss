@@ -14,14 +14,10 @@ class ChildConnection{
     this.onDisconnect = Function.prototype
     this.onError = Function.prototype
     //private
-    let connection = new RTCPeerConnection(servers)
+    const connection = new RTCPeerConnection(servers)
     let stream = null
     let state = null
     let connected = false
-
-    this.isConnected = ()=>{return connected}
-
-    this.getState = ()=>{return state}
 
     this.setStream = _stream =>{
       connection.oniceconnectionstatechange = handleConnectionStates
@@ -33,8 +29,6 @@ class ChildConnection{
     }
 
     this.listen = ()=>{
-      if(state === util.ConnectionState.connected)
-      return
       const setLocalDescription = connection.setLocalDescription.bind(connection)
       signaling.onReceiveDescription = acceptConnection
       connection.createOffer().then(setLocalDescription).catch(this.onError)
@@ -56,13 +50,11 @@ class ChildConnection{
     const handleConnectionStates = ()=>{
       state = connection.iceConnectionState
       if(state === util.ConnectionState.connected){
-        connected = true
         this.onConnect()
       }
       else if(state === util.ConnectionState.disconnected){
-        connected = false
-        this.onDisconnect()
         connection.close()
+        this.onDisconnect()
       }
     }
 

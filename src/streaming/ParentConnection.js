@@ -18,10 +18,19 @@ class ParentConnection {
 
     this.join = (streamTitle)=>{
       util.onAddStream(connection, this.onStream.bind(this))
+      connection.onicecandidate = gatherAllCandidates
       connection.oniceconnectionstatechange = handleConnectionStates
       signaling.onRequestDescriptionTimeout = this.join.bind(this, streamTitle)
       signaling.onReceiveDescription = onReceiveDescription
       signaling.requestDescription(streamTitle)
+    }
+
+    const gatherAllCandidates = event=>{
+      //If all candidates were collected
+      if(event.candidate === null){
+        signaling.candidates = candidates
+        signaling.description = connection.localDescription
+      }
     }
 
     const onReceiveDescription = (parentId, remoteDescription)=>{
