@@ -27,10 +27,8 @@ class ParentConnection {
 
     const gatherAllCandidates = event=>{
       //If all candidates were collected
-      if(event.candidate === null){
-        signaling.candidates = candidates
+      if(event.candidate === null)
         signaling.description = connection.localDescription
-      }
     }
 
     const onReceiveDescription = (parentId, remoteDescription)=>{

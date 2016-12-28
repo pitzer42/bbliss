@@ -13509,10 +13509,7 @@
 
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
 	    //If all candidates were collected
-	    if (event.candidate === null) {
-	      signaling.candidates = candidates;
-	      signaling.description = connection.localDescription;
-	    }
+	    if (event.candidate === null) signaling.description = connection.localDescription;
 	  };
 
 	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
