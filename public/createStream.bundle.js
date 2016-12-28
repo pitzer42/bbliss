@@ -13500,10 +13500,19 @@
 
 	  this.join = function (streamTitle) {
 	    util.onAddStream(connection, _this.onStream.bind(_this));
+	    connection.onicecandidate = gatherAllCandidates;
 	    connection.oniceconnectionstatechange = handleConnectionStates;
 	    signaling.onRequestDescriptionTimeout = _this.join.bind(_this, streamTitle);
 	    signaling.onReceiveDescription = onReceiveDescription;
 	    signaling.requestDescription(streamTitle);
+	  };
+
+	  var gatherAllCandidates = function gatherAllCandidates(event) {
+	    //If all candidates were collected
+	    if (event.candidate === null) {
+	      signaling.candidates = candidates;
+	      signaling.description = connection.localDescription;
+	    }
 	  };
 
 	  var onReceiveDescription = function onReceiveDescription(parentId, remoteDescription) {
@@ -15078,10 +15087,6 @@
 
 	'use strict';
 
-	var _stringify = __webpack_require__(86);
-
-	var _stringify2 = _interopRequireDefault(_stringify);
-
 	var _classCallCheck2 = __webpack_require__(6);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -15110,14 +15115,6 @@
 	  var state = null;
 	  var connected = false;
 
-	  this.isConnected = function () {
-	    return connected;
-	  };
-
-	  this.getState = function () {
-	    return state;
-	  };
-
 	  this.setStream = function (_stream) {
 	    connection.oniceconnectionstatechange = handleConnectionStates;
 	    connection.onicecandidate = gatherAllCandidates;
@@ -15127,20 +15124,12 @@
 	  };
 
 	  this.listen = function () {
-	    if (state === util.ConnectionState.connected) return;
 	    var setLocalDescription = connection.setLocalDescription.bind(connection);
 	    signaling.onReceiveDescription = acceptConnection;
 	    connection.createOffer().then(setLocalDescription).catch(_this.onError);
 	  };
 
 	  var gatherAllCandidates = function gatherAllCandidates(event) {
-	    if (event.candidate) {
-	      var clone = JSON.parse((0, _stringify2.default)(event.candidate));
-	      clone.priority = clone.type === 'host' ? 7241260435179962000 : 9115005270282338000;
-	      delete event.candidate;
-	      event.candidate = clone;
-	    }
-
 	    //If all candidates were collected
 	    if (event.candidate === null) {
 	      signaling.description = connection.localDescription;
@@ -15156,12 +15145,10 @@
 	  var handleConnectionStates = function handleConnectionStates() {
 	    state = connection.iceConnectionState;
 	    if (state === util.ConnectionState.connected) {
-	      connected = true;
 	      _this.onConnect();
 	    } else if (state === util.ConnectionState.disconnected) {
-	      connected = false;
-	      _this.onDisconnect();
 	      connection.close();
+	      _this.onDisconnect();
 	    }
 	  };
 
@@ -15169,22 +15156,6 @@
 	};
 
 	module.exports = ChildConnection;
-
-/***/ },
-/* 86 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(87), __esModule: true };
-
-/***/ },
-/* 87 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var core  = __webpack_require__(31)
-	  , $JSON = core.JSON || (core.JSON = {stringify: JSON.stringify});
-	module.exports = function stringify(it){ // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
-	};
 
 /***/ }
 /******/ ]);
