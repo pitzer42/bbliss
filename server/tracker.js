@@ -45,8 +45,8 @@ function removeFromTree(node){
 }
 
 function measureHeight(node){
-  height = 0
-  parent = getParent(node)
+  let height = 0
+  let parent = getParent(node)
   while(parent != null){
     height++
     parent = getParent(node)
