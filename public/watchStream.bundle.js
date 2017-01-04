@@ -10497,6 +10497,7 @@
 	  */
 	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
 	    console.log('MediaPeer.play'); //DEBUG
+	    console.time('startup');
 	    stream = {
 	      title: streamTitle,
 	      options: peerOptions,
@@ -10516,6 +10517,7 @@
 	    console.log('MediaPeer.onStream'); //DEBUG
 	    stream.tracks = tracks;
 	    _this.displayStream(tracks);
+	    console.timeEnd('startup');
 	    acceptNextChild();
 	  };
 
