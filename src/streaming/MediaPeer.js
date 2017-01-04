@@ -49,6 +49,7 @@ class MediaPeer{
     */
     this.play = (streamTitle, peerOptions, mediaStreamConstraints)=>{
       console.log('MediaPeer.play')//DEBUG
+      console.time('startup')
       stream = {
         title: streamTitle,
         options: peerOptions,
@@ -73,6 +74,7 @@ class MediaPeer{
       console.log('MediaPeer.onStream')//DEBUG
       stream.tracks = tracks
       this.displayStream(tracks)
+      console.timeEnd('startup')
       acceptNextChild()
     }
 
