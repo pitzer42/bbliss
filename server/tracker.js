@@ -44,6 +44,24 @@ function removeFromTree(node){
   console.log(dictodot(tree))
 }
 
+function measureHeight(node){
+  height = 0
+  parent = getParent(node)
+  while(parent != null){
+    height++
+    parent = getParent(node)
+  }
+  return height
+}
+
+function getParent(node){
+  node = node.slice(NODE_ID_OFFSET, NODE_ID_OFFSET + NODE_ID_LENGTH)
+  for(let parent in tree)
+  if(tree[parent] == node)
+  return parent
+  reurn null
+}
+
 function onAvailable(title, options, origin){
   bbliss.findStream(title, stream=>{
     if(stream){
@@ -95,6 +113,7 @@ function hookClient(socket){
   socket.on('con', (parent, child)=>{
     console.log(child)
     addToTree(parent, child)
+    console.log(measureHeight(child))
   })
 }
 
