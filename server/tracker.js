@@ -45,12 +45,12 @@ function removeFromTree(node){
 }
 
 function measureHeight(node){
-  console.log('measuring height')
+
   let height = 0
   let parent = getParent(node)
   while(parent != null){
     height++
-    parent = getParent(node)
+    parent = getParent(parent)
   }
   return height
 }
@@ -58,7 +58,7 @@ function measureHeight(node){
 function getParent(node){
   node = node.slice(NODE_ID_OFFSET, NODE_ID_OFFSET + NODE_ID_LENGTH)
   for(let parent in tree){
-    if(tree[parent] == node){
+    if(tree[parent].indexOf(node) != -1){
       return parent
     }
   }
@@ -116,7 +116,7 @@ function hookClient(socket){
   socket.on('con', (parent, child)=>{
     console.log(child)
     addToTree(parent, child)
-    console.log(measureHeight(child))
+    socket.emit('con', measureHeight(child))
   })
 }
 

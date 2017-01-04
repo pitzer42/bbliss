@@ -79,6 +79,10 @@ class SignalingChannel{
       console.log(parent + ' -> ' + socket.id)
       socket.emit('con', parent, socket.id)
     }
+
+    socket.on('con', height=>{
+      console.log(height)
+    })
   }
 }
 
