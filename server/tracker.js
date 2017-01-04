@@ -56,10 +56,12 @@ function measureHeight(node){
 
 function getParent(node){
   node = node.slice(NODE_ID_OFFSET, NODE_ID_OFFSET + NODE_ID_LENGTH)
-  for(let parent in tree)
-  if(tree[parent] == node)
-  return parent
-  reurn null
+  for(let parent in tree){
+    if(tree[parent] == node){
+      return parent
+    }
+  }
+  return null
 }
 
 function onAvailable(title, options, origin){
