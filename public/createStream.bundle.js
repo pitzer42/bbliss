@@ -10527,13 +10527,16 @@
 	  */
 	  this.play = function (streamTitle, peerOptions, mediaStreamConstraints) {
 	    console.log('MediaPeer.play'); //DEBUG
-	    console.time('startup');
+
 	    stream = {
 	      title: streamTitle,
 	      options: peerOptions,
 	      constraints: mediaStreamConstraints
 	    };
-	    if (stream.constraints) startStream();else joinStream();
+	    if (stream.constraints) startStream();else {
+	      console.time('startup');
+	      joinStream();
+	    }
 	  };
 
 	  /** Request access to the user`s media devices to capture a stream */
@@ -10544,6 +10547,7 @@
 
 	  /** When start receiving a stream, display it and start distributing it */
 	  var onStream = function onStream(tracks) {
+	    console.time('startup');
 	    console.log('MediaPeer.onStream'); //DEBUG
 	    stream.tracks = tracks;
 	    _this.displayStream(tracks);

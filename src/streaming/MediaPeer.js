@@ -49,7 +49,7 @@ class MediaPeer{
     */
     this.play = (streamTitle, peerOptions, mediaStreamConstraints)=>{
       console.log('MediaPeer.play')//DEBUG
-      console.time('startup')
+
       stream = {
         title: streamTitle,
         options: peerOptions,
@@ -57,8 +57,10 @@ class MediaPeer{
       }
       if(stream.constraints)
       startStream()
-      else
-      joinStream()
+      else{
+        console.time('startup')
+        joinStream()
+      }
     }
 
     /** Request access to the user`s media devices to capture a stream */
@@ -71,6 +73,7 @@ class MediaPeer{
 
     /** When start receiving a stream, display it and start distributing it */
     const onStream = tracks =>{
+      console.time('startup')
       console.log('MediaPeer.onStream')//DEBUG
       stream.tracks = tracks
       this.displayStream(tracks)
